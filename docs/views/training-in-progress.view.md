@@ -144,7 +144,7 @@ Primary action is disabled when any edited set is invalid or when request is in 
 
 ### offline (optional)
 
-Show offline banner. Allow local edits but block progression until sync is available.
+Show header warning indicator `!`; on tap show `No internet connection`. Allow local edits but block progression until sync is available.
 
 ## Validation
 

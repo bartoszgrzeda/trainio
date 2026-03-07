@@ -98,8 +98,7 @@ const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 const PHOTO_RULE_MESSAGE = 'Use JPG, PNG, or WEBP up to 5 MB.';
 const LOAD_PROFILE_ERROR_MESSAGE = 'Could not load profile. Pull to refresh and try again.';
 const SAVE_PROFILE_ERROR_MESSAGE = 'Could not save profile. Try again.';
-const OFFLINE_BLOCK_MESSAGE =
-  'You are offline. Saving and photo upload require internet.';
+const OFFLINE_MESSAGE = 'No internet connection';
 const SAVE_SUCCESS_MESSAGE = 'Profile updated';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -364,7 +363,7 @@ export function SettingsProfileScreen({
           setScreenState('offline');
           setBannerState({
             tone: 'offline',
-            message: OFFLINE_BLOCK_MESSAGE,
+            message: OFFLINE_MESSAGE,
           });
         } else {
           setScreenState('error');
@@ -502,7 +501,7 @@ export function SettingsProfileScreen({
     if (screenState === 'offline') {
       setBannerState({
         tone: 'offline',
-        message: OFFLINE_BLOCK_MESSAGE,
+        message: OFFLINE_MESSAGE,
       });
       return;
     }
@@ -552,7 +551,7 @@ export function SettingsProfileScreen({
         setScreenState('offline');
         setBannerState({
           tone: 'offline',
-          message: OFFLINE_BLOCK_MESSAGE,
+          message: OFFLINE_MESSAGE,
         });
       } else {
         setBannerState({
@@ -573,7 +572,7 @@ export function SettingsProfileScreen({
     if (screenState === 'offline') {
       setBannerState({
         tone: 'offline',
-        message: OFFLINE_BLOCK_MESSAGE,
+        message: OFFLINE_MESSAGE,
       });
       return;
     }
@@ -611,7 +610,7 @@ export function SettingsProfileScreen({
         setScreenState('offline');
         setBannerState({
           tone: 'offline',
-          message: OFFLINE_BLOCK_MESSAGE,
+          message: OFFLINE_MESSAGE,
         });
       } else if (status === 409) {
         setScreenState('default');
@@ -639,21 +638,18 @@ export function SettingsProfileScreen({
   }, [handleSaveProfile]);
 
   const contentBottomPadding = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      insets.bottom +
-      24 +
-      (screenState === 'offline' ? 72 : 0),
-    [insets.bottom, screenState],
+    () => 24,
+    [],
   );
-  const offlineBannerBottomOffset = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      Math.max(insets.bottom, 8) +
-      (activeTrainingId == null ? 24 : 0) +
-      8,
-    [activeTrainingId, insets.bottom],
+  const saveSectionBottomPadding = useMemo(
+    () => BOTTOM_MENU_HEIGHT + insets.bottom + 12,
+    [insets.bottom],
   );
+  const isOfflineIndicatorVisible =
+    screenState === 'offline' || bannerState?.tone === 'offline';
+  const handleOfflineInfoPress = useCallback(() => {
+    Alert.alert(OFFLINE_MESSAGE);
+  }, []);
 
   const displayedPhotoUri = pendingPhotoUri ?? draft?.photoUrl ?? null;
   const initials = getInitials(draft?.firstName ?? '', draft?.lastName ?? '');
@@ -677,158 +673,161 @@ export function SettingsProfileScreen({
             label: 'Back',
             onPress: handleBackAction,
           }}
+          statusIndicator={
+            isOfflineIndicatorVisible
+              ? {
+                  accessibilityLabel: 'No internet connection details',
+                  onPress: handleOfflineInfoPress,
+                }
+              : undefined
+          }
         />
 
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: contentBottomPadding },
-          ]}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-          }>
-          {bannerState && screenState !== 'offline' ? (
-            <StatusBanner tone={bannerState.tone} message={bannerState.message} />
-          ) : null}
+        <View style={styles.content}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: contentBottomPadding },
+            ]}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+            }>
+            {bannerState && screenState !== 'offline' ? (
+              <StatusBanner tone={bannerState.tone} message={bannerState.message} />
+            ) : null}
 
-          {screenState === 'loading' && !draft ? (
-            <View style={styles.section}>
-              <LoadingSkeleton rows={6} rowHeight={20} />
-            </View>
-          ) : (
-            <>
+            {screenState === 'loading' && !draft ? (
               <View style={styles.section}>
-                <View style={styles.photoRow}>
-                  {displayedPhotoUri ? (
-                    <Image source={{ uri: displayedPhotoUri }} style={styles.avatar} />
-                  ) : (
-                    <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                      <Text style={styles.avatarInitials}>{initials}</Text>
-                    </View>
-                  )}
+                <LoadingSkeleton rows={6} rowHeight={20} />
+              </View>
+            ) : (
+              <>
+                <View style={styles.section}>
+                  <View style={styles.photoRow}>
+                    {displayedPhotoUri ? (
+                      <Image source={{ uri: displayedPhotoUri }} style={styles.avatar} />
+                    ) : (
+                      <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                        <Text style={styles.avatarInitials}>{initials}</Text>
+                      </View>
+                    )}
 
-                  <View style={styles.photoActions}>
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={isUploadDisabled}
-                      onPress={() => {
-                        handleChoosePhoto().catch(() => undefined);
-                      }}
-                      style={({ pressed }) => [
-                        styles.secondaryButton,
-                        isUploadDisabled && styles.buttonDisabled,
-                        pressed && !isUploadDisabled && styles.secondaryButtonPressed,
-                      ]}>
-                      <Text style={styles.secondaryButtonText}>
-                        {isUploadingPhoto ? 'Uploading...' : 'Upload Photo'}
-                      </Text>
-                      {isUploadingPhoto ? (
-                        <ActivityIndicator size="small" color="#1D4ED8" />
-                      ) : null}
-                    </Pressable>
+                    <View style={styles.photoActions}>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={isUploadDisabled}
+                        onPress={() => {
+                          handleChoosePhoto().catch(() => undefined);
+                        }}
+                        style={({ pressed }) => [
+                          styles.secondaryButton,
+                          isUploadDisabled && styles.buttonDisabled,
+                          pressed && !isUploadDisabled && styles.secondaryButtonPressed,
+                        ]}>
+                        <Text style={styles.secondaryButtonText}>
+                          {isUploadingPhoto ? 'Uploading...' : 'Upload Photo'}
+                        </Text>
+                        {isUploadingPhoto ? (
+                          <ActivityIndicator size="small" color="#1D4ED8" />
+                        ) : null}
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  {photoUploadError ? (
+                    <Text style={styles.fieldErrorText}>{photoUploadError}</Text>
+                  ) : null}
+                </View>
+
+                <View style={styles.section}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>First Name</Text>
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={!isSaving}
+                      onChangeText={value => handleInputChange('firstName', value)}
+                      placeholder="Enter first name"
+                      style={styles.input}
+                      value={draft?.firstName ?? ''}
+                    />
+                    {fieldErrors.firstName ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Last Name</Text>
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={!isSaving}
+                      onChangeText={value => handleInputChange('lastName', value)}
+                      placeholder="Enter last name"
+                      style={styles.input}
+                      value={draft?.lastName ?? ''}
+                    />
+                    {fieldErrors.lastName ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Email</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!isSaving}
+                      keyboardType="email-address"
+                      onBlur={handleEmailBlur}
+                      onChangeText={value => handleInputChange('email', value)}
+                      placeholder="Enter email"
+                      style={styles.input}
+                      value={draft?.email ?? ''}
+                    />
+                    {fieldErrors.email ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Phone Number</Text>
+                    <TextInput
+                      autoCapitalize="none"
+                      editable={!isSaving}
+                      keyboardType="phone-pad"
+                      onChangeText={value => handleInputChange('phoneNumber', value)}
+                      placeholder="Enter phone number"
+                      style={styles.input}
+                      value={draft?.phoneNumber ?? ''}
+                    />
+                    <Text style={styles.fieldHintText}>
+                      Include only digits, spaces, +, -, (, )
+                    </Text>
+                    {fieldErrors.phoneNumber ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
+                    ) : null}
                   </View>
                 </View>
+              </>
+            )}
+          </ScrollView>
 
-                {photoUploadError ? (
-                  <Text style={styles.fieldErrorText}>{photoUploadError}</Text>
-                ) : null}
-              </View>
-
-              <View style={styles.section}>
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>First Name</Text>
-                  <TextInput
-                    autoCapitalize="words"
-                    editable={!isSaving}
-                    onChangeText={value => handleInputChange('firstName', value)}
-                    placeholder="Enter first name"
-                    style={styles.input}
-                    value={draft?.firstName ?? ''}
-                  />
-                  {fieldErrors.firstName ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Last Name</Text>
-                  <TextInput
-                    autoCapitalize="words"
-                    editable={!isSaving}
-                    onChangeText={value => handleInputChange('lastName', value)}
-                    placeholder="Enter last name"
-                    style={styles.input}
-                    value={draft?.lastName ?? ''}
-                  />
-                  {fieldErrors.lastName ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Email</Text>
-                  <TextInput
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={!isSaving}
-                    keyboardType="email-address"
-                    onBlur={handleEmailBlur}
-                    onChangeText={value => handleInputChange('email', value)}
-                    placeholder="Enter email"
-                    style={styles.input}
-                    value={draft?.email ?? ''}
-                  />
-                  {fieldErrors.email ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Phone Number</Text>
-                  <TextInput
-                    autoCapitalize="none"
-                    editable={!isSaving}
-                    keyboardType="phone-pad"
-                    onChangeText={value => handleInputChange('phoneNumber', value)}
-                    placeholder="Enter phone number"
-                    style={styles.input}
-                    value={draft?.phoneNumber ?? ''}
-                  />
-                  <Text style={styles.fieldHintText}>
-                    Include only digits, spaces, +, -, (, )
-                  </Text>
-                  {fieldErrors.phoneNumber ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
-                  ) : null}
-                </View>
-              </View>
-
-              <Pressable
-                accessibilityRole="button"
-                disabled={isSaveDisabled}
-                onPress={handleSavePress}
-                style={({ pressed }) => [
-                  styles.primaryButton,
-                  isSaveDisabled && styles.buttonDisabled,
-                  pressed && !isSaveDisabled && styles.primaryButtonPressed,
-                ]}>
-                <Text style={styles.primaryButtonText}>
-                  {isSaving ? 'Saving...' : 'Save'}
-                </Text>
-              </Pressable>
-            </>
-          )}
-        </ScrollView>
-
-        {screenState === 'offline' ? (
-          <View
-            style={[
-              styles.fixedOfflineBanner,
-              { bottom: offlineBannerBottomOffset },
-            ]}>
-            <StatusBanner tone="offline" message={OFFLINE_BLOCK_MESSAGE} />
+          <View style={[styles.saveSection, { paddingBottom: saveSectionBottomPadding }]}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={isSaveDisabled}
+              onPress={handleSavePress}
+              style={({ pressed }) => [
+                styles.primaryButton,
+                isSaveDisabled && styles.buttonDisabled,
+                pressed && !isSaveDisabled && styles.primaryButtonPressed,
+              ]}>
+              <Text style={styles.primaryButtonText}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </Text>
+            </Pressable>
           </View>
-        ) : null}
+        </View>
 
         <BottomMenu
           activeRoute="/settings"
@@ -848,6 +847,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F7FA',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -908,6 +913,11 @@ const styles = StyleSheet.create({
     color: '#111827',
     backgroundColor: '#FFFFFF',
   },
+  saveSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    backgroundColor: '#F5F7FA',
+  },
   primaryButton: {
     minHeight: 44,
     borderRadius: 12,
@@ -955,11 +965,5 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#B91C1C',
     fontWeight: '500',
-  },
-  fixedOfflineBanner: {
-    position: 'absolute',
-    right: 16,
-    left: 16,
-    zIndex: 6,
   },
 });

@@ -10,6 +10,10 @@ Each endpoint listed here is automatically extracted from the application view d
 
 - `POST /api/auth/sign-out`
 - `GET /api/clients`
+- `POST /api/clients`
+- `GET /api/clients/form-metadata`
+- `GET /api/exercises`
+- `POST /api/exercises`
 - `GET /api/profile/me`
 - `PATCH /api/profile/me`
 - `GET /api/trainings/home`
@@ -107,6 +111,196 @@ Example structure:
 
 - Parameter `query` example inferred from naming conventions.
 - Expanded shorthand payload fields `clients` using `Data Model` examples and naming heuristics.
+
+---
+
+## POST /api/clients
+
+### Summary
+
+Create a new client
+
+### Used in Views
+
+- client-new (`/clients/new`, `ClientNewView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+Example structure:
+
+```json
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "birthDate": "1992-04-16",
+  "phoneNumber": "+48123123123",
+  "gender": "male",
+  "notes": "Prefers evening training sessions."
+}
+```
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "id_1",
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "birthDate": "1992-04-16",
+  "phoneNumber": "+48123123123",
+  "gender": "male",
+  "notes": "Prefers evening training sessions.",
+  "fullName": "value"
+}
+```
+
+### Notes
+
+- Expanded shorthand payload fields `fullName`, `id` using `Data Model` examples and naming heuristics.
+
+---
+
+## GET /api/clients/form-metadata
+
+### Summary
+
+Load optional create-form metadata (for example supported gender options)
+
+### Used in Views
+
+- client-new (`/clients/new`, `ClientNewView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+None
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "genders": [
+    "male",
+    "female"
+  ]
+}
+```
+
+### Notes
+
+- None.
+
+---
+
+## GET /api/exercises
+
+### Summary
+
+Load or search seeded + custom exercises list
+
+### Used in Views
+
+- settings-exercises (`/settings/exercises`, `SettingsExercisesView`)
+
+### Query Parameters
+
+| name | type | required | description | example |
+| ---- | ---- | -------- | ----------- | ------- |
+| includeSeeded | string | yes | Query parameter | true |
+| query | string | yes | Query parameter | value |
+
+### Path Parameters
+
+None
+
+### Request Body
+
+None
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "exercises": [
+    {
+      "id": "ex_seed_001",
+      "name": "Bench Press",
+      "source": "seeded"
+    }
+  ]
+}
+```
+
+### Notes
+
+- Parameter `query` example inferred from naming conventions.
+
+---
+
+## POST /api/exercises
+
+### Summary
+
+Create custom exercise
+
+### Used in Views
+
+- exercise-new (`/settings/exercises/new`, `ExerciseNewView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+Example structure:
+
+```json
+{
+  "name": "Incline Dumbbell Press"
+}
+```
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "id_1",
+  "name": "Incline Dumbbell Press",
+  "source": "value"
+}
+```
+
+### Notes
+
+- Expanded shorthand payload fields `id`, `source` using `Data Model` examples and naming heuristics.
 
 ---
 

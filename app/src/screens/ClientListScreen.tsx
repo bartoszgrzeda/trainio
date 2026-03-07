@@ -183,10 +183,6 @@ export function ClientListScreen({
 
   const handleBottomNavigation = useCallback(
     (route: AppShellRoute) => {
-      if (route === '/clients') {
-        return;
-      }
-
       navigateToRoute(route);
     },
     [navigateToRoute],
@@ -205,6 +201,10 @@ export function ClientListScreen({
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(clampSearchValue(value));
+  }, []);
+
+  const handleOfflineInfoPress = useCallback(() => {
+    Alert.alert(OFFLINE_MESSAGE);
   }, []);
 
   const normalizedSearchQuery = useMemo(
@@ -227,27 +227,25 @@ export function ClientListScreen({
     clients.length > 0 &&
     visibleClients.length === 0;
   const showNoClients = clients.length === 0;
-  const offlineBannerBottomOffset = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      Math.max(insets.bottom, 8) +
-      (activeTrainingId == null ? 24 : 0) +
-      8,
-    [activeTrainingId, insets.bottom],
-  );
   const contentBottomPadding = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      insets.bottom +
-      24 +
-      (screenState === 'offline' ? 72 : 0),
-    [insets.bottom, screenState],
+    () => BOTTOM_MENU_HEIGHT + insets.bottom + 24,
+    [insets.bottom],
   );
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-        <GlobalHeader title="Clients" />
+        <GlobalHeader
+          title="Clients"
+          statusIndicator={
+            screenState === 'offline'
+              ? {
+                  accessibilityLabel: 'No internet connection details',
+                  onPress: handleOfflineInfoPress,
+                }
+              : undefined
+          }
+        />
 
         <ScrollView
           contentContainerStyle={[
@@ -265,17 +263,19 @@ export function ClientListScreen({
             <StatusBanner tone="error" message={bannerMessage} />
           ) : null}
 
-          <View style={styles.section}>
+          <View style={styles.controlsSection}>
             <View style={styles.searchRow}>
-              <TextInput
-                accessibilityLabel="Search clients"
-                autoCapitalize="words"
-                autoCorrect={false}
-                onChangeText={handleSearchChange}
-                placeholder={SEARCH_PLACEHOLDER}
-                style={styles.searchInput}
-                value={searchQuery}
-              />
+              <View style={styles.searchInputContainer}>
+                <TextInput
+                  accessibilityLabel="Search clients"
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  onChangeText={handleSearchChange}
+                  placeholder={SEARCH_PLACEHOLDER}
+                  style={styles.searchInput}
+                  value={searchQuery}
+                />
+              </View>
               <Pressable
                 accessibilityLabel="Add client"
                 accessibilityRole="button"
@@ -291,7 +291,9 @@ export function ClientListScreen({
                 <Text style={styles.addButtonText}>+</Text>
               </Pressable>
             </View>
+          </View>
 
+          <View style={styles.listSection}>
             {screenState === 'loading' && cacheRef.current == null ? (
               <LoadingSkeleton rows={5} rowHeight={44} />
             ) : visibleClients.length > 0 ? (
@@ -323,16 +325,6 @@ export function ClientListScreen({
           </View>
         </ScrollView>
 
-        {screenState === 'offline' ? (
-          <View
-            style={[
-              styles.fixedOfflineBanner,
-              { bottom: offlineBannerBottomOffset },
-            ]}>
-            <StatusBanner tone="offline" message={OFFLINE_MESSAGE} />
-          </View>
-        ) : null}
-
         <BottomMenu
           activeRoute="/clients"
           activeTrainingId={activeTrainingId}
@@ -355,13 +347,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    gap: 16,
+    gap: 12,
   },
-  section: {
+  controlsSection: {
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
-    padding: 16,
-    gap: 12,
+    padding: 12,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -372,6 +363,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  searchInputContainer: {
+    flex: 85,
   },
   addButton: {
     flex: 15,
@@ -393,7 +387,6 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   searchInput: {
-    flex: 85,
     minHeight: 44,
     borderRadius: 12,
     borderWidth: 1,
@@ -403,6 +396,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111827',
     backgroundColor: '#FFFFFF',
+  },
+  listSection: {
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    padding: 12,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 1,
   },
   listContainer: {
     gap: 8,
@@ -441,11 +444,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.45,
-  },
-  fixedOfflineBanner: {
-    position: 'absolute',
-    right: 16,
-    left: 16,
-    zIndex: 6,
   },
 });

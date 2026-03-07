@@ -160,7 +160,7 @@ After successful start action, navigate to `/training/start` and optionally show
 
 ### offline (optional)
 
-Show offline banner; keep cached list if available. Disable `Start Training` and show reason: `No internet connection`.
+Show header warning indicator `!`; on tap show `No internet connection`. Keep cached list if available. Disable `Start Training`.
 
 ## Edge Cases
 

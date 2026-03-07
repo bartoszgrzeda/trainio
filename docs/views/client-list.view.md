@@ -108,7 +108,7 @@ Show inline error banner: `Could not load clients. Try again.` Keep search visib
 
 ### offline (optional)
 
-Show offline banner. If cached clients exist, render cached list; otherwise show empty-state fallback. Disable pull-to-refresh until connectivity returns.
+Show header warning indicator `!`; on tap show `No internet connection`. If cached clients exist, render cached list; otherwise show empty-state fallback. Disable pull-to-refresh until connectivity returns.
 
 ## Validation
 

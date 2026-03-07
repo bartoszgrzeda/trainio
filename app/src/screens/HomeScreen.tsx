@@ -343,6 +343,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     handleStartTraining().catch(() => undefined);
   }, [handleStartTraining]);
 
+  const handleOfflineInfoPress = useCallback(() => {
+    Alert.alert(OFFLINE_MESSAGE);
+  }, []);
+
   const trainings = homeData?.trainings ?? [];
   const nextTraining = homeData?.nextTraining ?? null;
   const activeTrainingId = homeData?.activeTrainingId ?? null;
@@ -352,28 +356,25 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     isStartingTraining ||
     nextTraining == null ||
     activeTrainingId != null;
-  const offlineBannerBottomOffset = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      Math.max(insets.bottom, 8) +
-      (activeTrainingId == null ? 24 : 0) +
-      8,
-    [activeTrainingId, insets.bottom],
-  );
-
   const contentBottomPadding = useMemo(
-    () =>
-      BOTTOM_MENU_HEIGHT +
-      insets.bottom +
-      24 +
-      (screenState === 'offline' ? 72 : 0),
-    [insets.bottom, screenState],
+    () => BOTTOM_MENU_HEIGHT + insets.bottom + 24,
+    [insets.bottom],
   );
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-        <GlobalHeader title="Home" />
+        <GlobalHeader
+          title="Home"
+          statusIndicator={
+            screenState === 'offline'
+              ? {
+                  accessibilityLabel: 'No internet connection details',
+                  onPress: handleOfflineInfoPress,
+                }
+              : undefined
+          }
+        />
 
         <ScrollView
           contentContainerStyle={[
@@ -462,16 +463,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             )}
           </View>
         </ScrollView>
-
-        {screenState === 'offline' ? (
-          <View
-            style={[
-              styles.fixedOfflineBanner,
-              { bottom: offlineBannerBottomOffset },
-            ]}>
-            <StatusBanner tone="offline" message={OFFLINE_MESSAGE} />
-          </View>
-        ) : null}
 
         <BottomMenu
           activeRoute="/home"
@@ -600,11 +591,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#6B7280',
-  },
-  fixedOfflineBanner: {
-    position: 'absolute',
-    right: 16,
-    left: 16,
-    zIndex: 6,
   },
 });

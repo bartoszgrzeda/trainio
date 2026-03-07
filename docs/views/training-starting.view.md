@@ -132,7 +132,7 @@ Show inline banner (`Could not load training start data. Try again.`) and allow 
 
 ### offline (optional)
 
-Show offline banner and disable `Next` if state transition requires online sync.
+Show header warning indicator `!`; on tap show `No internet connection`. Disable `Next` if state transition requires online sync.
 
 ## Edge Cases
 

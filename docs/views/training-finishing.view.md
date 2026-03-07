@@ -113,7 +113,7 @@ After successful save, show toast (`Training saved`) then redirect.
 
 ### offline (optional)
 
-Show offline banner and block final save until connection is restored.
+Show header warning indicator `!`; on tap show `No internet connection`. Block final save until connection is restored.
 
 ## Validation
 

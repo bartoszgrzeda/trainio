@@ -55,6 +55,15 @@ Shared navigation rules:
   - Fixed position.
   - Equal-width tap zones for four items.
   - Label + icon per item.
+- Persistent save action:
+  - Any view with a primary `Save` action must render it in a dedicated bottom action section, directly above the bottom menu.
+  - Match the placement pattern used by `Settings` `Sign Out` (outside scrollable content).
+  - Keep the button visible in all screen states; disable when rules require, but do not hide it.
+- Offline connectivity messaging:
+  - `offline` status info must be rendered in the top header as a warning indicator (`!`) on the right side.
+  - Tapping the indicator opens a short explanation: `No internet connection`.
+  - Do not render dedicated offline banners in content or above the bottom menu.
+  - Offline messaging must not reflow or reposition primary actions (for example `Save`).
 - Long text in navigation labels is not allowed; use single-word labels.
 
 ## Shared Components
@@ -63,9 +72,9 @@ Shared navigation rules:
   - Props: `activeRoute`, `activeTrainingId`.
   - Handles enabled/disabled logic for `Training`.
 - `GlobalHeader`
-  - Optional title and right-side contextual actions.
+  - Optional title, right-side contextual actions, and optional offline warning indicator (`!`) with tap explanation.
 - `StatusBanner`
-  - Reusable inline banners for `offline`, `error`, and `info`.
+  - Reusable inline banners for `error` and `info` (offline uses header indicator).
 - `LoadingSkeleton`
   - Shared skeleton pattern used during initial data fetches.
 
@@ -74,7 +83,7 @@ Shared navigation rules:
 - `default`: app shell loaded, bottom menu interactive per enablement rules.
 - `loading`: render skeletons in content area; keep bottom menu visible.
 - `error`: show non-blocking error banner in content; keep navigation available.
-- `offline`: show offline banner; routes requiring network may disable primary actions.
+- `offline`: show header offline indicator (`!`); routes requiring network may disable primary actions.
 - `disabled`: specifically for menu/actions that are visible but currently unavailable (for example `Training` tab before training start).
 
 ## Permissions / Roles

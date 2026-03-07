@@ -2,11 +2,21 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClientListScreen } from './src/screens/ClientListScreen';
+import { ClientNewScreen } from './src/screens/ClientNewScreen';
+import { ExerciseNewScreen } from './src/screens/ExerciseNewScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { SettingsExercisesScreen } from './src/screens/SettingsExercisesScreen';
 import { SettingsProfileScreen } from './src/screens/SettingsProfileScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 
-type AppRoute = '/home' | '/clients' | '/settings' | '/settings/profile';
+type AppRoute =
+  | '/home'
+  | '/clients'
+  | '/clients/new'
+  | '/settings'
+  | '/settings/profile'
+  | '/settings/exercises'
+  | '/settings/exercises/new';
 
 function normalizeRoute(route: string): AppRoute | null {
   if (route === '/home') {
@@ -21,8 +31,23 @@ function normalizeRoute(route: string): AppRoute | null {
     return '/clients';
   }
 
+  if (route === '/clients/new') {
+    return '/clients/new';
+  }
+
   if (route === '/settings/profile' || route === 'settings-profile') {
     return '/settings/profile';
+  }
+
+  if (route === '/settings/exercises' || route === 'settings-exercises') {
+    return '/settings/exercises';
+  }
+
+  if (
+    route === '/settings/exercises/new' ||
+    route === 'exercise-new'
+  ) {
+    return '/settings/exercises/new';
   }
 
   return null;
@@ -90,6 +115,10 @@ function App() {
   const currentRoute = routeStack[routeStack.length - 1] ?? '/home';
 
   const renderCurrentScreen = () => {
+    if (currentRoute === '/clients/new') {
+      return <ClientNewScreen navigation={navigation} />;
+    }
+
     if (currentRoute === '/clients') {
       return <ClientListScreen navigation={navigation} />;
     }
@@ -100,6 +129,14 @@ function App() {
 
     if (currentRoute === '/settings/profile') {
       return <SettingsProfileScreen navigation={navigation} />;
+    }
+
+    if (currentRoute === '/settings/exercises') {
+      return <SettingsExercisesScreen navigation={navigation} />;
+    }
+
+    if (currentRoute === '/settings/exercises/new') {
+      return <ExerciseNewScreen navigation={navigation} />;
     }
 
     return <HomeScreen navigation={navigation} />;

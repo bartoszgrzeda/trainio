@@ -38,7 +38,7 @@ Authenticated trainer managing account preferences and session access.
   - Standalone destructive button `Sign Out`.
 - Behavior:
   - `Profile`: on tap, navigate to `settings-profile` view.
-  - `Exercises`: on tap, navigate to `settings-excercises` view.
+  - `Exercises`: on tap, navigate to `settings-exercises` view.
   - `Subscription`: on tap, navigate to `settings-subscription` view.
   - `Sign Out`: on tap, call sign-out API and clear local auth session.
   - `Sign Out` success: navigate to auth entry route.
@@ -55,7 +55,7 @@ Authenticated trainer managing account preferences and session access.
 | actionId | label | trigger | result |
 | --- | --- | --- | --- |
 | openSettingsProfile | Profile | Tap button | Navigate to `settings-profile` view |
-| openSettingsExcercises | Exercises | Tap button | Navigate to `settings-excercises` view |
+| openSettingsExercises | Exercises | Tap button | Navigate to `settings-exercises` view |
 | openSettingsSubscription | Subscription | Tap button | Navigate to `settings-subscription` view |
 | signOut | Sign Out | Tap button | Invalidate session and navigate to auth route |
 
@@ -66,7 +66,7 @@ Authenticated trainer managing account preferences and session access.
   "isSigningOut": false,
   "menuItems": [
     { "id": "profile", "label": "Profile", "targetView": "settings-profile" },
-    { "id": "excercises", "label": "Exercises", "targetView": "settings-excercises" },
+    { "id": "exercises", "label": "Exercises", "targetView": "settings-exercises" },
     { "id": "subscription", "label": "Subscription", "targetView": "settings-subscription" }
   ]
 }
@@ -102,7 +102,7 @@ Show inline banner: `Could not sign out. Try again.` Keep user on settings and a
 
 ### offline (optional)
 
-Show offline banner. Keep navigation buttons available, but block `Sign Out` if API requires network and show reason.
+Show header warning indicator `!`; on tap show `No internet connection`. Keep navigation buttons available, but block `Sign Out` if API requires network.
 
 ## Edge Cases
 
@@ -114,7 +114,7 @@ Show offline banner. Keep navigation buttons available, but block `Sign Out` if 
 
 - Entry point: `/settings` from bottom menu.
 - `Profile` -> `settings-profile` view.
-- `Exercises` -> `settings-excercises` view.
+- `Exercises` -> `settings-exercises` view.
 - `Subscription` -> `settings-subscription` view.
 - `Sign Out` success -> auth entry route (for example `/auth/login`).
 
@@ -122,5 +122,4 @@ Show offline banner. Keep navigation buttons available, but block `Sign Out` if 
 
 ### Assumptions (if any)
 
-- View IDs are intentionally kept as requested: `settings-excercises`.
-- Detailed behavior of `settings-profile`, `settings-excercises`, and `settings-subscription` is defined in separate view specs.
+- Detailed behavior of `settings-profile`, `settings-exercises`, and `settings-subscription` is defined in separate view specs.

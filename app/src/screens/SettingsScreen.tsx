@@ -25,12 +25,12 @@ type SettingsViewState =
   | 'offline'
   | 'disabled';
 
-type SettingsMenuId = 'profile' | 'excercises' | 'subscription';
+type SettingsMenuId = 'profile' | 'exercises' | 'subscription';
 
 interface SettingsMenuItem {
   id: SettingsMenuId;
   label: string;
-  targetView: 'settings-profile' | 'settings-excercises' | 'settings-subscription';
+  targetView: 'settings-profile' | 'settings-exercises' | 'settings-subscription';
 }
 
 interface NavigationLike {
@@ -59,9 +59,9 @@ const MENU_FALLBACK_MESSAGE = 'Using default settings menu configuration.';
 const DEFAULT_MENU_ITEMS: SettingsMenuItem[] = [
   { id: 'profile', label: 'Profile', targetView: 'settings-profile' },
   {
-    id: 'excercises',
+    id: 'exercises',
     label: 'Exercises',
-    targetView: 'settings-excercises',
+    targetView: 'settings-exercises',
   },
   {
     id: 'subscription',
@@ -147,10 +147,6 @@ export function SettingsScreen({
 
   const handleBottomNavigation = useCallback(
     (route: AppShellRoute) => {
-      if (route === '/settings') {
-        return;
-      }
-
       navigateToRoute(route);
     },
     [navigateToRoute],
@@ -224,8 +220,8 @@ export function SettingsScreen({
     handleSignOut().catch(() => undefined);
   }, [handleSignOut]);
 
-  const contentBottomPadding = useMemo(
-    () => BOTTOM_MENU_HEIGHT + insets.bottom + 24,
+  const signOutBottomPadding = useMemo(
+    () => BOTTOM_MENU_HEIGHT + insets.bottom + 12,
     [insets.bottom],
   );
 
@@ -237,34 +233,40 @@ export function SettingsScreen({
       <View style={styles.container}>
         <GlobalHeader title="Settings" />
 
-        <ScrollView
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: contentBottomPadding },
-          ]}>
-          {bannerState ? (
-            <StatusBanner tone={bannerState.tone} message={bannerState.message} />
-          ) : null}
+        <View style={styles.content}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}>
+            {bannerState ? (
+              <StatusBanner tone={bannerState.tone} message={bannerState.message} />
+            ) : null}
 
-          {screenState === 'empty' ? (
-            <StatusBanner tone="info" message={MENU_FALLBACK_MESSAGE} />
-          ) : null}
+            {screenState === 'empty' ? (
+              <StatusBanner tone="info" message={MENU_FALLBACK_MESSAGE} />
+            ) : null}
 
-          <View style={styles.actionsList}>
-            {menuItems.map(item => (
-              <Pressable
-                key={item.id}
-                accessibilityRole="button"
-                onPress={() => handleMenuNavigation(item.targetView)}
-                style={({ pressed }) => [
-                  styles.menuRow,
-                  pressed && styles.menuRowPressed,
-                ]}>
-                <Text style={styles.menuLabel}>{item.label}</Text>
-                <Text style={styles.menuChevron}>›</Text>
-              </Pressable>
-            ))}
+            <View style={styles.actionsList}>
+              {menuItems.map(item => (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  onPress={() => handleMenuNavigation(item.targetView)}
+                  style={({ pressed }) => [
+                    styles.menuRow,
+                    pressed && styles.menuRowPressed,
+                  ]}>
+                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text style={styles.menuChevron}>›</Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
 
+          <View
+            style={[
+              styles.signOutSection,
+              { paddingBottom: signOutBottomPadding },
+            ]}>
             <Pressable
               accessibilityRole="button"
               disabled={isSignOutDisabled}
@@ -286,7 +288,7 @@ export function SettingsScreen({
               <Text style={styles.helperText}>{OFFLINE_SIGN_OUT_MESSAGE}</Text>
             ) : null}
           </View>
-        </ScrollView>
+        </View>
 
         <BottomMenu
           activeRoute="/settings"
@@ -307,13 +309,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F7FA',
   },
+  content: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 16,
     gap: 16,
   },
   actionsList: {
     gap: 12,
+  },
+  signOutSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    gap: 8,
+    backgroundColor: '#F5F7FA',
   },
   menuRow: {
     minHeight: 44,

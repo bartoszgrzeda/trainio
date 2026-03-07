@@ -41,7 +41,7 @@ export function BottomMenu({
           const isDisabled = item.route === '/training' && isTrainingDisabled;
 
           const handlePress = () => {
-            if (isDisabled || isActive || !onNavigate) {
+            if (isDisabled || !onNavigate) {
               return;
             }
 
@@ -75,9 +75,6 @@ export function BottomMenu({
           );
         })}
       </View>
-      {isTrainingDisabled ? (
-        <Text style={styles.hintText}>Start a training to open this tab</Text>
-      ) : null}
     </View>
   );
 }
@@ -132,11 +129,5 @@ const styles = StyleSheet.create({
   },
   disabledText: {
     color: '#8A96A6',
-  },
-  hintText: {
-    marginTop: 4,
-    textAlign: 'center',
-    color: '#6B7280',
-    fontSize: 12,
   },
 });

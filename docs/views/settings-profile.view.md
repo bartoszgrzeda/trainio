@@ -130,7 +130,7 @@ Disable `Save` when form is unchanged, invalid, or while `isSaving == true`.
 
 ### offline (optional)
 
-Show offline banner. Keep fields editable locally, but block save/upload and explain network requirement.
+Show header warning indicator `!`; on tap show `No internet connection`. Keep fields editable locally, but block save/upload.
 
 ## Validation
 
