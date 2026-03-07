@@ -86,7 +86,7 @@ Authenticated trainer managing their client base.
 
 | method | endpoint | purpose | request | response |
 | --- | --- | --- | --- | --- |
-| GET | /api/clients?query={query} | Load or search clients list | n/a | `{ clients: [{ id, fullName }] }` |
+| GET | /clients/list?query={query} | Load or search clients list | n/a | `{ clients: [{ id, fullName }] }` |
 
 ## States
 

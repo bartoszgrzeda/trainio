@@ -98,9 +98,9 @@ Authenticated trainer updating account identity and contact information.
 
 | method | endpoint | purpose | request | response |
 | --- | --- | --- | --- | --- |
-| GET | /api/profile/me | Load current profile data | n/a | `{ id, photoUrl, photoAssetId, firstName, lastName, email, phoneNumber }` |
+| GET | /profile/get | Load current profile data | n/a | `{ id, photoUrl, photoAssetId, firstName, lastName, email, phoneNumber }` |
 | POST | /api/uploads/profile-photo | Upload selected photo file | `multipart/form-data` with `file` | `{ assetId, url }` |
-| PATCH | /api/profile/me | Save editable profile fields | `{ photoAssetId, firstName, lastName, email, phoneNumber }` | Updated profile object |
+| POST | /profile/update | Save editable profile fields | `{ photoAssetId, firstName, lastName, email, phoneNumber }` | Updated profile object |
 
 ## States
 
@@ -171,6 +171,6 @@ Show header warning indicator `!`; on tap show `No internet connection`. Keep fi
 
 ### Assumptions (if any)
 
-- Profile uses one `PATCH /api/profile/me` endpoint for all editable fields.
+- Profile uses one `POST /profile/update` endpoint for all editable fields.
 - Email updates may require backend uniqueness validation.
 - Phone number is stored as plain string; E.164 normalization can be applied server-side.

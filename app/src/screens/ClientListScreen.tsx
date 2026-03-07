@@ -79,7 +79,7 @@ function sortClientsByFullName(clients: ClientListItem[]): ClientListItem[] {
 
 async function fetchClients(query: string): Promise<ClientListItem[]> {
   const response = await fetch(
-    `${API_BASE_URL}/api/clients?query=${encodeURIComponent(query)}`,
+    `${API_BASE_URL}/clients/list?query=${encodeURIComponent(query)}`,
   );
 
   if (!response.ok) {

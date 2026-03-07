@@ -63,10 +63,6 @@ interface ClientFormErrors {
   notes?: string;
 }
 
-interface ClientFormMetadataResponse {
-  genders?: string[];
-}
-
 interface NewClientResponse {
   id: string;
 }
@@ -234,18 +230,6 @@ function isOfflineError(error: unknown): boolean {
   return /offline|internet|network/i.test(error.message);
 }
 
-function resolveGenderOptionsFromMetadata(
-  payload: ClientFormMetadataResponse,
-): ClientGender[] {
-  const normalized = (payload.genders ?? [])
-    .map(gender => gender.toLowerCase().trim())
-    .filter((gender): gender is ClientGender =>
-      SUPPORTED_GENDERS.includes(gender as ClientGender),
-    );
-
-  return normalized.length > 0 ? normalized : SUPPORTED_GENDERS;
-}
-
 function validateDraft(draft: ClientFormDraft): ClientFormErrors {
   const errors: ClientFormErrors = {};
 
@@ -308,14 +292,7 @@ function mapGenderLabel(value: ClientGender): string {
 }
 
 async function fetchClientFormMetadata(): Promise<ClientGender[]> {
-  const response = await fetch(`${API_BASE_URL}/api/clients/form-metadata`);
-
-  if (!response.ok) {
-    throw createApiError(response.status, 'Could not load form metadata.');
-  }
-
-  const payload = (await response.json()) as ClientFormMetadataResponse;
-  return resolveGenderOptionsFromMetadata(payload);
+  return SUPPORTED_GENDERS;
 }
 
 async function createClient(draft: ClientFormDraft): Promise<NewClientResponse> {
@@ -328,7 +305,7 @@ async function createClient(draft: ClientFormDraft): Promise<NewClientResponse> 
     notes: draft.notes.trim(),
   };
 
-  const response = await fetch(`${API_BASE_URL}/api/clients`, {
+  const response = await fetch(`${API_BASE_URL}/clients/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

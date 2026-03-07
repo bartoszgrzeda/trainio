@@ -1,8 +1,6 @@
 # Build output
-bin/
-obj/
-artifacts/
-publish/
+**/bin/
+**/obj/
 
 # IDE/editor
 .vs/

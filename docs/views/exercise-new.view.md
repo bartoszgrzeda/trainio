@@ -65,7 +65,7 @@ Authenticated trainer managing the exercise library.
 
 | method | endpoint | purpose | request | response |
 | --- | --- | --- | --- | --- |
-| POST | /api/exercises | Create custom exercise | `{ name }` | `{ id, name, source }` |
+| POST | /exercises/create | Create custom exercise | `{ name }` | `{ id, name, source }` |
 
 ## States
 

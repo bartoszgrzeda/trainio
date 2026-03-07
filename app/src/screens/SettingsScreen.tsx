@@ -36,6 +36,7 @@ interface SettingsMenuItem {
 interface NavigationLike {
   navigate: (route: string) => void;
   replace?: (route: string) => void;
+  addListener?: (event: 'focus', callback: () => void) => (() => void) | void;
 }
 
 interface SettingsScreenProps {
@@ -50,6 +51,7 @@ interface BannerState {
 
 const API_BASE_URL = 'http://localhost:3000';
 const SIGN_OUT_ERROR_MESSAGE = 'Could not sign out. Try again.';
+const OFFLINE_MESSAGE = 'No internet connection';
 const OFFLINE_SIGN_OUT_MESSAGE =
   'You are offline. Connect to the internet to sign out.';
 const ROUTE_UNAVAILABLE_MESSAGE =
@@ -86,6 +88,19 @@ async function loadMenuItems(): Promise<SettingsMenuItem[]> {
   return Promise.resolve(DEFAULT_MENU_ITEMS);
 }
 
+async function checkConnectivity(): Promise<boolean> {
+  try {
+    await fetch(API_BASE_URL);
+    return true;
+  } catch (error) {
+    if (isOfflineError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+}
+
 async function signOutRequest(): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/auth/sign-out`, {
     method: 'POST',
@@ -119,19 +134,67 @@ export function SettingsScreen({
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [bannerState, setBannerState] = useState<BannerState | null>(null);
 
+  const syncConnectivity = useCallback(async () => {
+    try {
+      const isOnline = await checkConnectivity();
+
+      setScreenState(previousState => {
+        if (previousState === 'loading' || previousState === 'disabled') {
+          return previousState;
+        }
+
+        if (!isOnline) {
+          return 'offline';
+        }
+
+        return previousState === 'offline' ? 'default' : previousState;
+      });
+    } catch {
+      // Ignore probe failures unrelated to connectivity.
+    }
+  }, []);
+
   useEffect(() => {
+    let isMounted = true;
+
     const loadMenuConfiguration = async () => {
       try {
         const loadedItems = await loadMenuItems();
+        if (!isMounted) {
+          return;
+        }
+
         setMenuItems(loadedItems);
       } catch {
+        if (!isMounted) {
+          return;
+        }
+
         setMenuItems(DEFAULT_MENU_ITEMS);
         setScreenState('empty');
       }
     };
 
     loadMenuConfiguration().catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  useEffect(() => {
+    syncConnectivity().catch(() => undefined);
+
+    const unsubscribe = navigation?.addListener?.('focus', () => {
+      syncConnectivity().catch(() => undefined);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [navigation, syncConnectivity]);
 
   const navigateToRoute = useCallback(
     (route: string) => {
@@ -174,11 +237,17 @@ export function SettingsScreen({
     }
 
     if (screenState === 'offline') {
-      setBannerState({
-        tone: 'offline',
-        message: OFFLINE_SIGN_OUT_MESSAGE,
-      });
-      return;
+      const isOnline = await checkConnectivity();
+
+      if (isOnline) {
+        setScreenState('default');
+      } else {
+        setBannerState({
+          tone: 'offline',
+          message: OFFLINE_SIGN_OUT_MESSAGE,
+        });
+        return;
+      }
     }
 
     setIsSigningOut(true);
@@ -219,19 +288,34 @@ export function SettingsScreen({
   const handleSignOutPress = useCallback(() => {
     handleSignOut().catch(() => undefined);
   }, [handleSignOut]);
+  const handleOfflineInfoPress = useCallback(() => {
+    Alert.alert(OFFLINE_MESSAGE);
+  }, []);
 
   const signOutBottomPadding = useMemo(
     () => BOTTOM_MENU_HEIGHT + insets.bottom + 12,
     [insets.bottom],
   );
 
+  const isOfflineIndicatorVisible =
+    screenState === 'offline' || bannerState?.tone === 'offline';
   const isSignOutDisabled =
     screenState === 'offline' || screenState === 'disabled' || isSigningOut;
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
       <View style={styles.container}>
-        <GlobalHeader title="Settings" />
+        <GlobalHeader
+          title="Settings"
+          statusIndicator={
+            isOfflineIndicatorVisible
+              ? {
+                  accessibilityLabel: 'No internet connection details',
+                  onPress: handleOfflineInfoPress,
+                }
+              : undefined
+          }
+        />
 
         <View style={styles.content}>
           <ScrollView
@@ -279,14 +363,10 @@ export function SettingsScreen({
               <Text style={styles.signOutButtonText}>
                 {isSigningOut ? 'Signing Out...' : 'Sign Out'}
               </Text>
-              {isSigningOut ? (
+            {isSigningOut ? (
                 <ActivityIndicator color="#B91C1C" size="small" />
               ) : null}
             </Pressable>
-
-            {screenState === 'offline' ? (
-              <Text style={styles.helperText}>{OFFLINE_SIGN_OUT_MESSAGE}</Text>
-            ) : null}
           </View>
         </View>
 
@@ -377,9 +457,5 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.55,
-  },
-  helperText: {
-    fontSize: 13,
-    color: '#7C2D12',
   },
 });

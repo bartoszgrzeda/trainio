@@ -103,7 +103,7 @@ Authenticated trainer managing the exercise library used in training plans.
 
 | method | endpoint | purpose | request | response |
 | --- | --- | --- | --- | --- |
-| GET | /api/exercises?query={query}&includeSeeded=true | Load or search seeded + custom exercises list | n/a | `{ exercises: [{ id, name, source }] }` |
+| GET | /exercises/list?query={query}&includeSeeded=true | Load or search seeded + custom exercises list | n/a | `{ exercises: [{ id, name, source }] }` |
 
 ## States
 

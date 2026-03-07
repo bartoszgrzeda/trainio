@@ -151,7 +151,7 @@ async function fetchCustomExerciseNames(): Promise<Set<string>> {
     includeSeeded: 'true',
   });
 
-  const response = await fetch(`${API_BASE_URL}/api/exercises?${params.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/exercises/list?${params.toString()}`);
   if (!response.ok) {
     throw createApiError(response.status, LOAD_FORM_ERROR_MESSAGE);
   }
@@ -166,7 +166,7 @@ async function fetchCustomExerciseNames(): Promise<Set<string>> {
 }
 
 async function createExercise(name: string): Promise<NewExerciseResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/exercises`, {
+  const response = await fetch(`${API_BASE_URL}/exercises/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

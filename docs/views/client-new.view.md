@@ -112,7 +112,7 @@ Authenticated trainer adding a client to their client base.
 
 | actionId | label | trigger | result |
 | --- | --- | --- | --- |
-| loadClientNewForm | n/a | Screen opens | Initialize empty form and load optional form metadata |
+| loadClientNewForm | n/a | Screen opens | Initialize empty form defaults |
 | pickBirthdate | Birthdate field | Tap field | Open native date picker and set `birthDate` |
 | changeField | n/a | User edits any input | Update form draft and clear field-level error |
 | submitClient | Save | Tap primary button | Validate and create client via API |
@@ -138,8 +138,7 @@ Authenticated trainer adding a client to their client base.
 
 | method | endpoint | purpose | request | response |
 | --- | --- | --- | --- | --- |
-| GET | /api/clients/form-metadata | Load optional create-form metadata (for example supported gender options) | n/a | `{ genders: ["male", "female"] }` |
-| POST | /api/clients | Create a new client | `{ firstName, lastName, birthDate, phoneNumber, gender, notes }` | `{ id, firstName, lastName, birthDate, phoneNumber, gender, notes, fullName }` |
+| POST | /clients/create | Create a new client | `{ firstName, lastName, birthDate, phoneNumber, gender, notes }` | `{ id, firstName, lastName, birthDate, phoneNumber, gender, notes, fullName }` |
 
 ## States
 
@@ -149,7 +148,7 @@ All fields are visible and editable. `Save` is enabled only when required fields
 
 ### loading
 
-Show field skeletons/placeholders while form metadata is loading. Keep screen visible but disable submit until initialization completes.
+Show field skeletons/placeholders while form defaults are initializing. Keep screen visible but disable submit until initialization completes.
 
 ### empty
 

@@ -1,0 +1,44 @@
+@Trainio_HostAddress = http://localhost:5111
+
+POST {{Trainio_HostAddress}}/clients/create
+Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "birthDate": "1992-04-16",
+  "phoneNumber": "+48123123123",
+  "gender": "male",
+  "notes": "Prefers evening sessions"
+}
+
+###
+
+GET {{Trainio_HostAddress}}/clients/list?query=
+Accept: application/json
+
+###
+
+POST {{Trainio_HostAddress}}/exercises/create
+Content-Type: application/json
+
+{
+  "name": "Pull Up"
+}
+
+###
+
+GET {{Trainio_HostAddress}}/exercises/list?query=&includeSeeded=true
+Accept: application/json
+
+###
+
+POST {{Trainio_HostAddress}}/profile/update
+Content-Type: application/json
+
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan@example.com",
+  "phoneNumber": "+48123123123"
+}

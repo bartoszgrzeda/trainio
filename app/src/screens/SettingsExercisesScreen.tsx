@@ -154,7 +154,7 @@ async function fetchExercises(query: string): Promise<ExerciseItem[]> {
     includeSeeded: 'true',
   });
 
-  const response = await fetch(`${API_BASE_URL}/api/exercises?${params.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/exercises/list?${params.toString()}`);
 
   if (!response.ok) {
     throw createApiError(response.status, LOAD_EXERCISES_ERROR_MESSAGE);

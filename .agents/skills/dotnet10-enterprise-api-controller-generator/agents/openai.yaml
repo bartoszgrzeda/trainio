@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dotnet 10 API Controller Generator"
+  short_description: "Generate enterprise ASP.NET Core controllers in .NET 10"
+  default_prompt: "Use $dotnet10-enterprise-api-controller-generator to generate a production-ready ASP.NET Core Web API controller that matches this repository architecture and coding style."

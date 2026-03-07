@@ -1,0 +1,3 @@
+display_name: EF Core Persistence Architect
+short_description: Maintain EF Core persistence architecture safely.
+default_prompt: Use $ef-core-persistence-architect to analyze my C#/.NET solution and safely implement or extend EF Core persistence components while reusing existing patterns before creating new ones.

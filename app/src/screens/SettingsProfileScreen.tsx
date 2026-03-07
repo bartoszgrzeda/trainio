@@ -193,7 +193,7 @@ function hasProfileChanges(original: ProfileRecord, draft: ProfileDraft): boolea
 }
 
 async function fetchProfile(): Promise<ProfileRecord> {
-  const response = await fetch(`${API_BASE_URL}/api/profile/me`);
+  const response = await fetch(`${API_BASE_URL}/profile/get`);
 
   if (!response.ok) {
     throw createApiError(response.status, LOAD_PROFILE_ERROR_MESSAGE);
@@ -224,8 +224,8 @@ async function uploadProfilePhoto(photo: SelectedPhoto): Promise<UploadPhotoResp
 }
 
 async function saveProfile(profile: ProfileDraft): Promise<ProfileRecord> {
-  const response = await fetch(`${API_BASE_URL}/api/profile/me`, {
-    method: 'PATCH',
+  const response = await fetch(`${API_BASE_URL}/profile/update`, {
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dotnet 10 DDD Value Object Generator"
+  short_description: "Generate .NET 10 DDD value objects and tests"
+  default_prompt: "Use $dotnet10-ddd-value-object-generator to generate a .NET 10 value object with DDD invariants, xUnit + FluentAssertions tests, and EF Core mapping guidance from my input spec."

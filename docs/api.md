@@ -9,13 +9,6 @@ Each endpoint listed here is automatically extracted from the application view d
 ## Endpoints Index
 
 - `POST /api/auth/sign-out`
-- `GET /api/clients`
-- `POST /api/clients`
-- `GET /api/clients/form-metadata`
-- `GET /api/exercises`
-- `POST /api/exercises`
-- `GET /api/profile/me`
-- `PATCH /api/profile/me`
 - `GET /api/trainings/home`
 - `POST /api/trainings/{trainingId}/exercises/{exerciseId}/results`
 - `POST /api/trainings/{trainingId}/finish`
@@ -27,6 +20,12 @@ Each endpoint listed here is automatically extracted from the application view d
 - `GET /api/trainings/{trainingId}/starting`
 - `POST /api/trainings/{trainingId}/state`
 - `POST /api/uploads/profile-photo`
+- `POST /clients/create`
+- `GET /clients/list`
+- `POST /exercises/create`
+- `GET /exercises/list`
+- `GET /profile/get`
+- `POST /profile/update`
 
 ---
 
@@ -65,343 +64,6 @@ Example structure:
 ### Notes
 
 - None.
-
----
-
-## GET /api/clients
-
-### Summary
-
-Load or search clients list
-
-### Used in Views
-
-- client-list (`/clients`, `ClientListView`)
-
-### Query Parameters
-
-| name | type | required | description | example |
-| ---- | ---- | -------- | ----------- | ------- |
-| query | string | yes | Query parameter | value |
-
-### Path Parameters
-
-None
-
-### Request Body
-
-None
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "clients": [
-    {
-      "id": "cl_001",
-      "fullName": "Jan Kowalski"
-    }
-  ]
-}
-```
-
-### Notes
-
-- Parameter `query` example inferred from naming conventions.
-- Expanded shorthand payload fields `clients` using `Data Model` examples and naming heuristics.
-
----
-
-## POST /api/clients
-
-### Summary
-
-Create a new client
-
-### Used in Views
-
-- client-new (`/clients/new`, `ClientNewView`)
-
-### Query Parameters
-
-None
-
-### Path Parameters
-
-None
-
-### Request Body
-
-Example structure:
-
-```json
-{
-  "firstName": "Jan",
-  "lastName": "Kowalski",
-  "birthDate": "1992-04-16",
-  "phoneNumber": "+48123123123",
-  "gender": "male",
-  "notes": "Prefers evening training sessions."
-}
-```
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "id": "id_1",
-  "firstName": "Jan",
-  "lastName": "Kowalski",
-  "birthDate": "1992-04-16",
-  "phoneNumber": "+48123123123",
-  "gender": "male",
-  "notes": "Prefers evening training sessions.",
-  "fullName": "value"
-}
-```
-
-### Notes
-
-- Expanded shorthand payload fields `fullName`, `id` using `Data Model` examples and naming heuristics.
-
----
-
-## GET /api/clients/form-metadata
-
-### Summary
-
-Load optional create-form metadata (for example supported gender options)
-
-### Used in Views
-
-- client-new (`/clients/new`, `ClientNewView`)
-
-### Query Parameters
-
-None
-
-### Path Parameters
-
-None
-
-### Request Body
-
-None
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "genders": [
-    "male",
-    "female"
-  ]
-}
-```
-
-### Notes
-
-- None.
-
----
-
-## GET /api/exercises
-
-### Summary
-
-Load or search seeded + custom exercises list
-
-### Used in Views
-
-- settings-exercises (`/settings/exercises`, `SettingsExercisesView`)
-
-### Query Parameters
-
-| name | type | required | description | example |
-| ---- | ---- | -------- | ----------- | ------- |
-| includeSeeded | string | yes | Query parameter | true |
-| query | string | yes | Query parameter | value |
-
-### Path Parameters
-
-None
-
-### Request Body
-
-None
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "exercises": [
-    {
-      "id": "ex_seed_001",
-      "name": "Bench Press",
-      "source": "seeded"
-    }
-  ]
-}
-```
-
-### Notes
-
-- Parameter `query` example inferred from naming conventions.
-
----
-
-## POST /api/exercises
-
-### Summary
-
-Create custom exercise
-
-### Used in Views
-
-- exercise-new (`/settings/exercises/new`, `ExerciseNewView`)
-
-### Query Parameters
-
-None
-
-### Path Parameters
-
-None
-
-### Request Body
-
-Example structure:
-
-```json
-{
-  "name": "Incline Dumbbell Press"
-}
-```
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "id": "id_1",
-  "name": "Incline Dumbbell Press",
-  "source": "value"
-}
-```
-
-### Notes
-
-- Expanded shorthand payload fields `id`, `source` using `Data Model` examples and naming heuristics.
-
----
-
-## GET /api/profile/me
-
-### Summary
-
-Load current profile data
-
-### Used in Views
-
-- settings-profile (`/settings/profile`, `SettingsProfileView`)
-
-### Query Parameters
-
-None
-
-### Path Parameters
-
-None
-
-### Request Body
-
-None
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "id": "usr_120",
-  "photoUrl": "https://cdn.example.com/profile/usr_120.jpg",
-  "photoAssetId": "asset_893",
-  "firstName": "Jan",
-  "lastName": "Kowalski",
-  "email": "jan.kowalski@example.com",
-  "phoneNumber": "+48123456789"
-}
-```
-
-### Notes
-
-- None.
-
----
-
-## PATCH /api/profile/me
-
-### Summary
-
-Save editable profile fields
-
-### Used in Views
-
-- settings-profile (`/settings/profile`, `SettingsProfileView`)
-
-### Query Parameters
-
-None
-
-### Path Parameters
-
-None
-
-### Request Body
-
-Example structure:
-
-```json
-{
-  "photoAssetId": "asset_893",
-  "firstName": "Jan",
-  "lastName": "Kowalski",
-  "email": "jan.kowalski@example.com",
-  "phoneNumber": "+48123456789"
-}
-```
-
-### Response Body
-
-Example structure:
-
-```json
-{
-  "id": "usr_120",
-  "photoUrl": "https://cdn.example.com/profile/usr_120.jpg",
-  "photoAssetId": "asset_893",
-  "firstName": "Jan",
-  "lastName": "Kowalski",
-  "email": "jan.kowalski@example.com",
-  "phoneNumber": "+48123456789",
-  "isDirty": false,
-  "isUploadingPhoto": false,
-  "isSaving": false
-}
-```
-
-### Notes
-
-- Response body inferred from `Data Model` because API response was a textual description.
 
 ---
 
@@ -983,4 +645,299 @@ Example structure:
 
 - Request body inferred from `multipart/form-data` description.
 - Expanded shorthand payload fields `assetId`, `url` using `Data Model` examples and naming heuristics.
+
+---
+
+## POST /clients/create
+
+### Summary
+
+Create a new client
+
+### Used in Views
+
+- client-new (`/clients/new`, `ClientNewView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+Example structure:
+
+```json
+{
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "birthDate": "1992-04-16",
+  "phoneNumber": "+48123123123",
+  "gender": "male",
+  "notes": "Prefers evening training sessions."
+}
+```
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "id_1",
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "birthDate": "1992-04-16",
+  "phoneNumber": "+48123123123",
+  "gender": "male",
+  "notes": "Prefers evening training sessions.",
+  "fullName": "value"
+}
+```
+
+### Notes
+
+- Expanded shorthand payload fields `fullName`, `id` using `Data Model` examples and naming heuristics.
+
+---
+
+## GET /clients/list
+
+### Summary
+
+Load or search clients list
+
+### Used in Views
+
+- client-list (`/clients`, `ClientListView`)
+
+### Query Parameters
+
+| name | type | required | description | example |
+| ---- | ---- | -------- | ----------- | ------- |
+| query | string | yes | Query parameter | value |
+
+### Path Parameters
+
+None
+
+### Request Body
+
+None
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "clients": [
+    {
+      "id": "cl_001",
+      "fullName": "Jan Kowalski"
+    }
+  ]
+}
+```
+
+### Notes
+
+- Parameter `query` example inferred from naming conventions.
+
+---
+
+## POST /exercises/create
+
+### Summary
+
+Create custom exercise
+
+### Used in Views
+
+- exercise-new (`/settings/exercises/new`, `ExerciseNewView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+Example structure:
+
+```json
+{
+  "name": "Incline Dumbbell Press"
+}
+```
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "id_1",
+  "name": "Incline Dumbbell Press",
+  "source": "value"
+}
+```
+
+### Notes
+
+- Expanded shorthand payload fields `id`, `source` using `Data Model` examples and naming heuristics.
+
+---
+
+## GET /exercises/list
+
+### Summary
+
+Load or search seeded + custom exercises list
+
+### Used in Views
+
+- settings-exercises (`/settings/exercises`, `SettingsExercisesView`)
+
+### Query Parameters
+
+| name | type | required | description | example |
+| ---- | ---- | -------- | ----------- | ------- |
+| includeSeeded | string | yes | Query parameter | true |
+| query | string | yes | Query parameter | value |
+
+### Path Parameters
+
+None
+
+### Request Body
+
+None
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "exercises": [
+    {
+      "id": "ex_seed_001",
+      "name": "Bench Press",
+      "source": "seeded"
+    }
+  ]
+}
+```
+
+### Notes
+
+- Parameter `query` example inferred from naming conventions.
+
+---
+
+## GET /profile/get
+
+### Summary
+
+Load current profile data
+
+### Used in Views
+
+- settings-profile (`/settings/profile`, `SettingsProfileView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+None
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "usr_120",
+  "photoUrl": "https://cdn.example.com/profile/usr_120.jpg",
+  "photoAssetId": "asset_893",
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@example.com",
+  "phoneNumber": "+48123456789"
+}
+```
+
+### Notes
+
+- None.
+
+---
+
+## POST /profile/update
+
+### Summary
+
+Save editable profile fields
+
+### Used in Views
+
+- settings-profile (`/settings/profile`, `SettingsProfileView`)
+
+### Query Parameters
+
+None
+
+### Path Parameters
+
+None
+
+### Request Body
+
+Example structure:
+
+```json
+{
+  "photoAssetId": "asset_893",
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@example.com",
+  "phoneNumber": "+48123456789"
+}
+```
+
+### Response Body
+
+Example structure:
+
+```json
+{
+  "id": "usr_120",
+  "photoUrl": "https://cdn.example.com/profile/usr_120.jpg",
+  "photoAssetId": "asset_893",
+  "firstName": "Jan",
+  "lastName": "Kowalski",
+  "email": "jan.kowalski@example.com",
+  "phoneNumber": "+48123456789",
+  "isDirty": false,
+  "isUploadingPhoto": false,
+  "isSaving": false
+}
+```
+
+### Notes
+
+- Response body inferred from `Data Model` because API response was a textual description.
 <!-- GENERATED SECTION END -->
