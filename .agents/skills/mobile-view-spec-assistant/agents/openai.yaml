@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile View Spec Assistant"
+  short_description: "Write mobile view specs for dev handoff"
+  default_prompt: "Use $mobile-view-spec-assistant to turn this rough mobile screen idea into a polished .view.md spec and separate app-level concerns."

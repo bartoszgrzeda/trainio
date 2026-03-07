@@ -1,0 +1,126 @@
+---
+id: settings
+name: SettingsView
+route: /settings
+auth: true
+layout: mobile
+title: Settings
+description: Account settings hub with quick navigation to profile, exercises, subscription, and sign-out.
+---
+
+# Settings
+
+## Purpose
+
+Provide a simple account settings hub where the trainer can open specific settings areas and sign out.
+
+## User
+
+Authenticated trainer managing account preferences and session access.
+
+## Main Goals
+
+- Open profile settings.
+- Open exercises settings.
+- Open subscription settings.
+- Sign out of the app.
+
+## Sections
+
+### 1. Settings Actions
+
+- Purpose: Provide direct access to account settings and session actions.
+- Fields/Data Shown: `isSigningOut`.
+- Components:
+  - Standalone button `Profile`.
+  - Standalone button `Exercises`.
+  - Standalone button `Subscription`.
+  - Standalone destructive button `Sign Out`.
+- Behavior:
+  - `Profile`: on tap, navigate to `settings-profile` view.
+  - `Exercises`: on tap, navigate to `settings-excercises` view.
+  - `Subscription`: on tap, navigate to `settings-subscription` view.
+  - `Sign Out`: on tap, call sign-out API and clear local auth session.
+  - `Sign Out` success: navigate to auth entry route.
+- Rules:
+  - All four buttons are rendered as independent controls in a single list.
+  - Do not display grouping headers such as `Account` or `Session`.
+  - `Profile`, `Exercises`, and `Subscription` are always visible and enabled.
+  - Disable `Sign Out` while sign-out request is in progress.
+  - If sign-out fails, keep user on settings and show error banner.
+- Empty State: n/a.
+
+## Actions
+
+| actionId | label | trigger | result |
+| --- | --- | --- | --- |
+| openSettingsProfile | Profile | Tap button | Navigate to `settings-profile` view |
+| openSettingsExcercises | Exercises | Tap button | Navigate to `settings-excercises` view |
+| openSettingsSubscription | Subscription | Tap button | Navigate to `settings-subscription` view |
+| signOut | Sign Out | Tap button | Invalidate session and navigate to auth route |
+
+## Data Model
+
+```json
+{
+  "isSigningOut": false,
+  "menuItems": [
+    { "id": "profile", "label": "Profile", "targetView": "settings-profile" },
+    { "id": "excercises", "label": "Exercises", "targetView": "settings-excercises" },
+    { "id": "subscription", "label": "Subscription", "targetView": "settings-subscription" }
+  ]
+}
+```
+
+## API
+
+| method | endpoint | purpose | request | response |
+| --- | --- | --- | --- | --- |
+| POST | /api/auth/sign-out | End current session | n/a | `{ "success": true }` |
+
+## States
+
+### default
+
+All four standalone buttons are visible. Navigation buttons are enabled. `Sign Out` is enabled.
+
+### loading
+
+When sign-out is in progress, keep settings options visible and disable `Sign Out` with loading indicator.
+
+### empty
+
+Not applicable for this static menu screen. If menu configuration fails to load, fallback to local default items (`Profile`, `Exercises`, `Subscription`).
+
+### error
+
+Show inline banner: `Could not sign out. Try again.` Keep user on settings and allow retry.
+
+### disabled (optional)
+
+`Sign Out` is disabled while `isSigningOut == true`.
+
+### offline (optional)
+
+Show offline banner. Keep navigation buttons available, but block `Sign Out` if API requires network and show reason.
+
+## Edge Cases
+
+- User taps `Sign Out` multiple times quickly; only first request should execute.
+- Session is already expired before `Sign Out`; treat response as successful local sign-out.
+- Target settings views are temporarily unavailable; show non-blocking error and remain on current screen.
+
+## Navigation
+
+- Entry point: `/settings` from bottom menu.
+- `Profile` -> `settings-profile` view.
+- `Exercises` -> `settings-excercises` view.
+- `Subscription` -> `settings-subscription` view.
+- `Sign Out` success -> auth entry route (for example `/auth/login`).
+
+## Notes
+
+### Assumptions (if any)
+
+- View IDs are intentionally kept as requested: `settings-excercises`.
+- Detailed behavior of `settings-profile`, `settings-excercises`, and `settings-subscription` is defined in separate view specs.

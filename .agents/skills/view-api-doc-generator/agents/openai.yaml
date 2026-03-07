@@ -1,0 +1,4 @@
+interface:
+  display_name: "View API Doc Generator"
+  short_description: "Generate docs/api.md from view specs"
+  default_prompt: "Use $view-api-doc-generator to scan docs/views/*.view.md and generate or update docs/api.md with merged endpoint documentation."

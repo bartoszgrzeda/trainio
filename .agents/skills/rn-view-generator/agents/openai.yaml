@@ -1,0 +1,4 @@
+interface:
+  display_name: "RN View Generator"
+  short_description: "Generate RN screens from app-shell + view specs"
+  default_prompt: "Use $rn-view-generator to generate a production-ready React Native TypeScript screen from docs/app-shell.md and a selected docs/views/*.view.md file."
