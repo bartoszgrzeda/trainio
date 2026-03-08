@@ -1,0 +1,10 @@
+result:
+  mode: "single_view" # one of: single_view, sections, refinement, app_level, audit
+  file_path: "docs/views/home.view.md"
+  content_markdown: "<full markdown output>"
+  assumptions:
+    - "Dashboard list supports pull-to-refresh."
+  audit:
+    summary: null
+    findings: []
+

@@ -371,7 +371,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.home">
         <GlobalHeader
           title="Home"
           statusIndicator={
@@ -402,6 +402,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 Next Training
               </Text>
               <Pressable
+                testID="button.home.startTraining"
                 accessibilityLabel="Start Training"
                 accessibilityRole="button"
                 disabled={isStartDisabled}
@@ -417,7 +418,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             {screenState === 'loading' && !homeData ? (
               <LoadingSkeleton rows={2} rowHeight={18} />
             ) : nextTraining ? (
-              <View style={styles.nextTrainingCard}>
+              <View style={styles.nextTrainingCard} testID="card.home.nextTraining">
                 <Text style={styles.nextTrainingText}>
                   Next Training: {nextTraining.name} - {nextTraining.startTime}
                 </Text>
@@ -426,7 +427,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 </Text>
               </View>
             ) : (
-              <Text style={styles.emptyText}>No next training scheduled</Text>
+              <Text style={styles.emptyText} testID="text.home.nextTraining.empty">
+                No next training scheduled
+              </Text>
             )}
           </View>
 
@@ -436,16 +439,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 Today Training
               </Text>
               <Pressable
+                testID="button.home.addTraining"
                 accessibilityLabel="Add training"
                 accessibilityRole="button"
-                disabled={screenState === 'loading'}
+                disabled={false}
                 onPress={handleOpenAddTraining}
                 style={({ pressed }) => [
                   styles.actionButton,
-                  screenState === 'loading' && styles.buttonDisabled,
-                  pressed &&
-                    screenState !== 'loading' &&
-                    styles.actionButtonPressed,
+                  pressed && styles.actionButtonPressed,
                 ]}>
                 <Text style={styles.actionButtonText}>+</Text>
               </Pressable>
@@ -453,9 +454,12 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             {screenState === 'loading' && !homeData ? (
               <LoadingSkeleton rows={4} rowHeight={22} />
             ) : trainings.length > 0 ? (
-              <View style={styles.listContainer}>
+              <View style={styles.listContainer} testID="list.home.trainings">
                 {trainings.map(training => (
-                  <View key={training.id} style={styles.listRow}>
+                  <View
+                    key={training.id}
+                    style={styles.listRow}
+                    testID={`item.home.training.${training.id}`}>
                     <Text style={styles.timeText}>{training.startTime}</Text>
                     <View style={styles.listDetails}>
                       <Text style={styles.nameText}>{training.name}</Text>
@@ -467,7 +471,9 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyText}>No trainings planned for today</Text>
+              <Text style={styles.emptyText} testID="text.home.trainings.empty">
+                No trainings planned for today
+              </Text>
             )}
           </View>
         </ScrollView>

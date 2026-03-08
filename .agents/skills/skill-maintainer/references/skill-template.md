@@ -2,6 +2,16 @@
 
 Use this template to create new skills with consistent, high-signal structure.
 
+## Required Support Pack
+
+Every new skill must include:
+
+- `SKILL.md`
+- `references/` with focused operational docs
+- `references/examples/` with at least one concrete example artifact
+- input/output schema example files when the skill consumes or produces structured payloads
+- `scripts/` and/or `assets/` when deterministic generation or reusable templates are required
+
 ## Template
 
 ```md
@@ -61,6 +71,7 @@ Example prompts:
 
 - [references/<doc-1>.md](references/<doc-1>.md)
 - [references/<doc-2>.md](references/<doc-2>.md)
+- [references/examples/<example-1>.<ext>](references/examples/<example-1>.<ext>)
 ```
 
 ## Authoring Notes
@@ -69,8 +80,11 @@ Example prompts:
 - Make description triggerable, not marketing-style.
 - Prefer operational verbs: `scan`, `validate`, `generate`, `patch`, `report`.
 - Keep `SKILL.md` procedural; move detailed material to `references/`.
-- Add `scripts/` only for deterministic repeated operations.
-- Add `assets/` only for output artifacts/templates.
+- Always add at least one concrete example under `references/examples/`.
+- Include input/output schema examples when the skill has structured contracts.
+- Add `scripts/` when repeated deterministic operations are part of skill execution.
+- Add `assets/` when template artifacts improve consistency.
+- Ensure `References` links resolve to real files.
 - Avoid multi-purpose "do everything" skills.
 
 ## Description Quality Pattern
@@ -82,4 +96,3 @@ Use this pattern:
 Example:
 
 `Generate API deprecation plans with migration guidance and rollout checkpoints. Use when requests mention endpoint sunsets, client migration timelines, compatibility windows, or communication plans.`
-

@@ -1,0 +1,76 @@
+platforms:
+  - ios
+  - android
+app:
+  name: Trainio Mobile
+  packageId: com.trainio.mobile
+  bundleId: com.trainio.mobile
+flows:
+  launch: true
+  onboarding: true
+  login: true
+  home: true
+  navigation: true
+  profile: true
+  settings: true
+  logout: true
+screens:
+  - name: Splash
+    route: Splash
+    testIds:
+      - screen.splash
+      - button.onboarding.continue
+  - name: Login
+    route: Login
+    testIds:
+      - screen.login
+      - input.username
+      - input.password
+      - button.login.submit
+      - text.auth.error.invalidCredentials
+  - name: Home
+    route: HomeTabs
+    testIds:
+      - screen.home
+      - tab.home
+      - tab.profile
+      - tab.settings
+  - name: Profile
+    route: Profile
+    testIds:
+      - screen.profile
+      - button.profile.edit
+      - button.logout
+  - name: Settings
+    route: Settings
+    testIds:
+      - screen.settings
+      - button.settings.save
+forms:
+  - screen: Login
+    fields:
+      - name: username
+        testId: input.username
+        required: true
+      - name: password
+        testId: input.password
+        required: true
+auth:
+  login:
+    usernameTestId: input.username
+    passwordTestId: input.password
+    submitTestId: button.login.submit
+    successLandingTestId: screen.home
+    failureMessageTestId: text.auth.error.invalidCredentials
+data:
+  users:
+    valid:
+      username: qa+valid@trainio.app
+      password: StrongPass123!
+    invalid:
+      username: qa+invalid@trainio.app
+      password: WrongPass!
+constraints:
+  avoidTextSelectors: true
+  requireTestIdRecommendations: true
+assumptionsAllowed: true

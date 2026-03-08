@@ -1085,7 +1085,7 @@ export function ClientScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.clients.details">
         <GlobalHeader
           title="Client"
           leftAction={{
@@ -1128,6 +1128,7 @@ export function ClientScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>First Name</Text>
                     <TextInput
+                      testID="input.clients.firstName"
                       autoCapitalize="words"
                       editable={!draft.isSaving && !draft.isDeleting && isClientAvailable}
                       maxLength={50}
@@ -1145,6 +1146,7 @@ export function ClientScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Last Name</Text>
                     <TextInput
+                      testID="input.clients.lastName"
                       autoCapitalize="words"
                       editable={!draft.isSaving && !draft.isDeleting && isClientAvailable}
                       maxLength={50}
@@ -1163,6 +1165,7 @@ export function ClientScreen({
                     <Text style={styles.fieldLabel}>Birthdate</Text>
                     <View style={styles.birthdateInput}>
                       <Pressable
+                        testID="button.clients.birthDate.open"
                         accessibilityRole="button"
                         disabled={draft.isSaving || draft.isDeleting || !isClientAvailable}
                         onPress={handleBirthdatePress}
@@ -1184,6 +1187,7 @@ export function ClientScreen({
                       </Pressable>
 
                       <Pressable
+                        testID="button.clients.birthDate.clear"
                         accessibilityLabel="Clear birthdate"
                         accessibilityRole="button"
                         disabled={
@@ -1220,6 +1224,7 @@ export function ClientScreen({
                     {isBirthDatePickerVisible ? (
                       <View style={styles.birthdatePickerContainer}>
                         <DateTimePicker
+                          testID="input.clients.birthDate.picker"
                           display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                           maximumDate={maxBirthDate}
                           mode="date"
@@ -1243,6 +1248,7 @@ export function ClientScreen({
                         return (
                           <Pressable
                             key={gender}
+                            testID={`button.clients.gender.${gender}`}
                             accessibilityRole="button"
                             disabled={draft.isSaving || draft.isDeleting || !isClientAvailable}
                             onPress={() => handleGenderSelect(gender)}
@@ -1274,6 +1280,7 @@ export function ClientScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Phone Number</Text>
                     <TextInput
+                      testID="input.clients.phoneNumber"
                       editable={!draft.isSaving && !draft.isDeleting && isClientAvailable}
                       keyboardType="phone-pad"
                       onBlur={() => handleFieldBlur('phoneNumber')}
@@ -1292,6 +1299,7 @@ export function ClientScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Notes</Text>
                     <TextInput
+                      testID="input.clients.notes"
                       editable={!draft.isSaving && !draft.isDeleting && isClientAvailable}
                       maxLength={500}
                       multiline
@@ -1316,6 +1324,7 @@ export function ClientScreen({
           <View style={[styles.actionsSection, { paddingBottom: actionSectionBottomPadding }]}>
             <View style={styles.actionsRow}>
               <Pressable
+                testID="button.clients.save"
                 accessibilityRole="button"
                 disabled={isUpdateDisabled}
                 onPress={() => {
@@ -1335,6 +1344,7 @@ export function ClientScreen({
               </Pressable>
 
               <Pressable
+                testID="button.clients.delete"
                 accessibilityRole="button"
                 disabled={isDeleteDisabled}
                 onPress={handleDeletePress}

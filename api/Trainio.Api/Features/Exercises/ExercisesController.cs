@@ -28,7 +28,54 @@ public sealed class ExercisesController : ControllerBase
 
         var created = await _exerciseService.CreateAsync(new CreateExerciseCommand(request.Name), cancellationToken);
 
-        return Ok(new ExerciseResponse(created.Id, created.Name, created.Source.ToString().ToLowerInvariant()));
+        return Ok(ToResponse(created));
+    }
+
+    [HttpPost("update")]
+    [ProducesResponseType(typeof(ExerciseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ExerciseResponse>> UpdateAsync(
+        [FromBody] UpdateExerciseRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var updated = await _exerciseService.UpdateAsync(
+            new UpdateExerciseCommand(request.Id, request.Name),
+            cancellationToken);
+
+        if (updated is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToResponse(updated));
+    }
+
+    [HttpPost("delete")]
+    [ProducesResponseType(typeof(DeleteExerciseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<DeleteExerciseResponse>> DeleteAsync(
+        [FromBody] DeleteExerciseRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var deleted = await _exerciseService.DeleteAsync(request.Id, cancellationToken);
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return Ok(new DeleteExerciseResponse(true));
     }
 
     [HttpGet("list")]
@@ -42,12 +89,23 @@ public sealed class ExercisesController : ControllerBase
 
         return Ok(new ExerciseListResponse(
             exercises
-                .Select(exercise => new ExerciseResponse(exercise.Id, exercise.Name, exercise.Source.ToString().ToLowerInvariant()))
+                .Select(ToResponse)
                 .ToArray()));
+    }
+
+    private static ExerciseResponse ToResponse(ExerciseDto exercise)
+    {
+        return new ExerciseResponse(exercise.Id, exercise.Name, exercise.Source.ToString().ToLowerInvariant());
     }
 }
 
 public sealed record CreateExerciseRequest(string Name);
+
+public sealed record UpdateExerciseRequest(Guid Id, string Name);
+
+public sealed record DeleteExerciseRequest(Guid Id);
+
+public sealed record DeleteExerciseResponse(bool Success);
 
 public sealed record ExerciseListResponse(IReadOnlyList<ExerciseResponse> Exercises);
 

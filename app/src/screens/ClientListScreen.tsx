@@ -44,6 +44,7 @@ const LOAD_ERROR_MESSAGE = 'Could not load clients. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 const SEARCH_PLACEHOLDER = 'Search clients';
 const SEARCH_MAX_LENGTH = 80;
+const SEARCH_LENGTH_ERROR_MESSAGE = 'Search can contain up to 80 characters.';
 const EMPTY_CLIENTS_MESSAGE = 'No clients yet. Add your first client.';
 const EMPTY_SEARCH_MESSAGE = 'No clients found.';
 
@@ -98,14 +99,6 @@ function resolveScreenState(clients: ClientListItem[]): ClientListViewState {
   return 'default';
 }
 
-function clampSearchValue(value: string): string {
-  if (value.length <= SEARCH_MAX_LENGTH) {
-    return value;
-  }
-
-  return value.slice(0, SEARCH_MAX_LENGTH);
-}
-
 export function ClientListScreen({
   navigation,
   activeTrainingId = null,
@@ -115,8 +108,8 @@ export function ClientListScreen({
 
   const [clients, setClients] = useState<ClientListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState(lastSearchQuery);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [screenState, setScreenState] = useState<ClientListViewState>('loading');
-  const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [loadWarningDetails, setLoadWarningDetails] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -141,7 +134,7 @@ export function ClientListScreen({
       setScreenState('loading');
     }
 
-    setBannerMessage(null);
+    setLoadWarningDetails(null);
 
     try {
       const loadedClients = await fetchClients('');
@@ -152,11 +145,9 @@ export function ClientListScreen({
     } catch (error) {
       if (isOfflineError(error)) {
         setScreenState('offline');
-        setBannerMessage(null);
         setLoadWarningDetails(null);
       } else {
         setScreenState(cacheRef.current ? resolveScreenState(cacheRef.current) : 'error');
-        setBannerMessage(null);
         setLoadWarningDetails(LOAD_ERROR_MESSAGE);
       }
 
@@ -204,7 +195,13 @@ export function ClientListScreen({
   );
 
   const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(clampSearchValue(value));
+    if (value.length > SEARCH_MAX_LENGTH) {
+      setSearchError(SEARCH_LENGTH_ERROR_MESSAGE);
+      return;
+    }
+
+    setSearchQuery(value);
+    setSearchError(null);
   }, []);
 
   const handleOfflineInfoPress = useCallback(() => {
@@ -243,7 +240,7 @@ export function ClientListScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.clients.list">
         <GlobalHeader
           title="Clients"
           statusIndicator={
@@ -257,6 +254,7 @@ export function ClientListScreen({
         />
 
         <ScrollView
+          testID="scroll.clients.list"
           contentContainerStyle={[
             styles.scrollContent,
             { paddingBottom: contentBottomPadding },
@@ -268,14 +266,15 @@ export function ClientListScreen({
               enabled={screenState !== 'offline'}
             />
           }>
-          {bannerMessage && screenState !== 'offline' ? (
-            <StatusBanner tone="error" message={bannerMessage} />
+          {screenState === 'error' && loadWarningDetails ? (
+            <StatusBanner tone="error" message={loadWarningDetails} />
           ) : null}
 
           <View style={styles.controlsSection}>
             <View style={styles.searchRow}>
               <View style={styles.searchInputContainer}>
                 <TextInput
+                  testID="input.clients.search"
                   accessibilityLabel="Search clients"
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -286,6 +285,7 @@ export function ClientListScreen({
                 />
               </View>
               <Pressable
+                testID="button.clients.add"
                 accessibilityLabel="Add client"
                 accessibilityRole="button"
                 disabled={screenState === 'loading'}
@@ -300,16 +300,22 @@ export function ClientListScreen({
                 <Text style={styles.addButtonText}>+</Text>
               </Pressable>
             </View>
+            {searchError ? (
+              <Text style={styles.searchErrorText} testID="text.clients.searchError">
+                {searchError}
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.listSection}>
             {screenState === 'loading' && cacheRef.current == null ? (
               <LoadingSkeleton rows={5} rowHeight={44} />
             ) : visibleClients.length > 0 ? (
-              <View style={styles.listContainer}>
+              <View style={styles.listContainer} testID="list.clients">
                 {visibleClients.map(client => (
                   <Pressable
                     key={client.id}
+                    testID={`item.client.${client.id}`}
                     accessibilityRole="button"
                     onPress={() => handleClientPress(client.id)}
                     style={({ pressed }) => [
@@ -327,9 +333,13 @@ export function ClientListScreen({
                 ))}
               </View>
             ) : showNoMatches ? (
-              <Text style={styles.emptyText}>{EMPTY_SEARCH_MESSAGE}</Text>
+              <Text style={styles.emptyText} testID="text.clients.empty.noMatches">
+                {EMPTY_SEARCH_MESSAGE}
+              </Text>
             ) : showNoClients ? (
-              <Text style={styles.emptyText}>{EMPTY_CLIENTS_MESSAGE}</Text>
+              <Text style={styles.emptyText} testID="text.clients.empty.noClients">
+                {EMPTY_CLIENTS_MESSAGE}
+              </Text>
             ) : null}
           </View>
         </ScrollView>
@@ -450,6 +460,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: '#6B7280',
+  },
+  searchErrorText: {
+    fontSize: 13,
+    color: '#B91C1C',
+    fontWeight: '500',
   },
   buttonDisabled: {
     opacity: 0.45,

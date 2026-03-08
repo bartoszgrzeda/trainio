@@ -1,0 +1,26 @@
+interpretation:
+  summary: "Generated ClientList screen from view spec and added matching create-client E2E flow."
+  selected_files:
+    app_shell: docs/app-shell.md
+    view_spec: docs/views/clients-list.view.md
+generated_or_updated_files:
+  - path: app/src/screens/ClientListScreen.tsx
+    purpose: "Screen implementation with view states/actions and stable testIDs."
+  - path: app/e2e/screens/client-list.screen.ts
+    purpose: "Detox helper for list interactions."
+  - path: app/e2e/tests/clients.add-client.e2e.ts
+    purpose: "End-to-end add-client flow and list assertion."
+screen_code_block: "<typescript screen code>"
+e2e_code_block: "<typescript detox test code>"
+verification:
+  - command: npm run lint
+    result: passed
+    key_output: "No ESLint errors."
+  - command: npx tsc --noEmit
+    result: passed
+    key_output: "Type check successful."
+  - command: npm run e2e:test:ios
+    result: passed
+    key_output: "Create-client flow passed."
+assumptions:
+  - "Detox infrastructure already exists in the repository."

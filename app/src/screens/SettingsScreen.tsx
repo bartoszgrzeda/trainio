@@ -308,7 +308,7 @@ export function SettingsScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.settings">
         <GlobalHeader
           title="Settings"
           statusIndicator={
@@ -337,6 +337,7 @@ export function SettingsScreen({
               {menuItems.map(item => (
                 <Pressable
                   key={item.id}
+                  testID={`button.settings.menu.${item.id}`}
                   accessibilityRole="button"
                   onPress={() => handleMenuNavigation(item.targetView)}
                   style={({ pressed }) => [

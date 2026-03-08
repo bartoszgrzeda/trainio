@@ -1,0 +1,24 @@
+app_shell: docs/app-shell.md
+view_spec: docs/views/clients-list.view.md
+target:
+  screen_name: ClientListScreen
+  screen_path: app/src/screens/ClientListScreen.tsx
+e2e:
+  enabled: true
+  test_path: app/e2e/tests/clients.add-client.e2e.ts
+  helpers_paths:
+    - app/e2e/screens/client-list.screen.ts
+    - app/e2e/screens/client-new.screen.ts
+verification:
+  require_e2e_execution: true
+  commands_preferred:
+    - npm run lint
+    - npx tsc --noEmit
+    - npm test -- --watchAll=false
+    - npm run e2e:test:ios
+constraints:
+  avoid_feature_invention: true
+  selector_priority:
+    - by.id
+    - by.label
+    - by.text

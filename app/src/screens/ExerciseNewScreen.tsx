@@ -497,7 +497,7 @@ export function ExerciseNewScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.exercises.new">
         <GlobalHeader
           title="New Exercise"
           leftAction={{
@@ -534,6 +534,7 @@ export function ExerciseNewScreen({
               <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>Name</Text>
                 <TextInput
+                  testID="input.exercises.name"
                   accessibilityLabel="Exercise name"
                   autoCapitalize="words"
                   autoCorrect={false}
@@ -554,6 +555,7 @@ export function ExerciseNewScreen({
 
           <View style={[styles.saveSection, { paddingBottom: saveSectionBottomPadding }]}>
             <Pressable
+              testID="button.exercises.save"
               accessibilityRole="button"
               disabled={isSaveDisabled}
               onPress={() => {

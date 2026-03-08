@@ -31,7 +31,7 @@ Quality bands:
 | 6 | Output Clarity | Expected output structure/content | Output format sections or templates are explicit | No output contract for important outputs |
 | 7 | Rules Quality | Constraints, non-goals, and safety bounds | Clear do/do-not rules prevent drift | No limits; skill can become generic assistant |
 | 8 | Scope Control | Narrow and composable design | Skill stays single-purpose; split guidance exists | Skill tries to handle unrelated tasks |
-| 9 | References Quality | Effective use of `references/` | Long details moved to references with clear links | All detail packed into SKILL.md; no references |
+| 9 | Support Pack Quality | Completeness and usefulness of `references/`, examples, and helper artifacts | References are practical, at least one concrete example exists, and support files (schemas/scripts/assets) are present when relevant | Missing references/examples, broken links, or `SKILL.md`-only delivery |
 | 10 | Convention Fit | Consistency with repository patterns | Structure and terminology align with repo style | Ignores local conventions or naming patterns |
 
 ## Priority Mapping
@@ -40,15 +40,16 @@ Use these priorities for audit findings.
 
 - `P1`: Blocks reliable execution or selection.
   - Missing/weak description, no workflow, no purpose, severe scope drift.
+  - Missing required support pack (no references/examples for a created or updated skill).
 - `P2`: Significant quality or maintainability risk.
-  - Weak checklist, missing examples, unclear output format, inconsistent structure.
+  - Weak checklist, unclear output format, inconsistent structure, or shallow support artifacts.
 - `P3`: Minor polish.
   - Wording, formatting, light consistency improvements.
 
 ## Audit Procedure
 
 1. Read `SKILL.md` frontmatter and body.
-2. Inspect `references/`, `scripts/`, and `assets/` only when relevant.
+2. Inspect `references/` and `references/examples/` for every skill; inspect `scripts/` and `assets/` when relevant.
 3. Score all 10 criteria.
 4. Record concrete evidence for each criterion scored `0` or `1`.
 5. Propose minimal high-impact fixes first (`P1`, then `P2`).
@@ -69,11 +70,10 @@ Scores:
 6. Output Clarity: <0-3>
 7. Rules Quality: <0-3>
 8. Scope Control: <0-3>
-9. References Quality: <0-3>
+9. Support Pack Quality: <0-3>
 10. Convention Fit: <0-3>
 
 Top Issues:
 - [P1/P2/P3] <issue> -> <fix>
 - [P1/P2/P3] <issue> -> <fix>
 ```
-

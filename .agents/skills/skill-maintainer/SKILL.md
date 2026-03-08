@@ -1,11 +1,11 @@
 ---
 name: skill-maintainer
-description: Audit, standardize, and improve repository skills under `.agents` using a canonical SKILL.md structure with clear triggers, procedural workflows, quality checklists, output contracts, and scoped rules.
+description: Audit, standardize, and improve repository skills under `.agents` using a canonical SKILL.md structure plus complete support packs (`references/`, concrete examples, and helper artifacts such as `scripts/` or `assets/` when needed).
 ---
 
 # Purpose
 
-Maintain high-signal repository skills by auditing quality, standardizing structure, and applying minimal, purpose-preserving improvements.
+Maintain high-signal repository skills by auditing quality, standardizing structure, and ensuring each skill includes complete, usable support artifacts alongside `SKILL.md`.
 
 # When to Use
 
@@ -24,8 +24,8 @@ Example prompts:
 
 1. Select operating mode (`audit`, `update`, `create`).
 2. Discover target skills by scanning `.agents/**/SKILL.md`.
-3. Load context progressively (`SKILL.md` first, then `references/`, `scripts/`, `assets/` as needed).
-4. Apply mode-specific procedure.
+3. Load context progressively (`SKILL.md` first, then `references/`, `scripts/`, `assets/`) and inventory missing support artifacts.
+4. Apply mode-specific procedure, including support-pack completion.
 5. Verify checklist quality gates before final response.
 
 ## Audit Mode
@@ -49,16 +49,26 @@ Example prompts:
    - `Examples`
    - `References`
 3. Improve triggerability and procedural clarity.
-4. Move heavy details/examples to `references/` when useful.
-5. Preserve useful project-specific conventions.
+4. Ensure a complete support pack exists for the skill:
+   - `references/` docs for operational detail
+   - `references/examples/` with at least one concrete example artifact
+   - input/output schema examples when the skill has structured inputs/outputs
+   - `scripts/` and/or `assets/` when deterministic generation or templates are needed
+5. Create or update missing support files, keeping them concise and directly actionable.
+6. Preserve useful project-specific conventions.
 
 ## Create Mode
 
 1. Infer the narrowest useful skill scope.
 2. Create a concise hyphen-case skill name.
-3. Create folder with `SKILL.md` and optional `references/`, `scripts/`, `assets/`.
+3. Create folder with a required support pack:
+   - `SKILL.md`
+   - `references/` with focused guidance docs
+   - `references/examples/` with concrete example files
+   - input/output schema example files when relevant
+   - `scripts/` and/or `assets/` when needed for deterministic execution
 4. Author from [references/skill-template.md](references/skill-template.md).
-5. Add realistic trigger prompts and quality gates.
+5. Add realistic trigger prompts, quality gates, and explicit links to support files.
 
 # Checklist
 
@@ -71,6 +81,9 @@ Example prompts:
 - Output format is explicit when output shape matters.
 - Rules include constraints and non-goals.
 - References are used for heavy detail instead of bloated `SKILL.md` bodies.
+- Skill ships with support artifacts beyond `SKILL.md` (references + examples at minimum).
+- Input/output schema examples are included when the skill expects structured payloads.
+- Every file linked in `References` exists and is usable.
 - Structure and terminology align with repository conventions.
 
 # Output Format
@@ -133,6 +146,16 @@ Use one of these formats.
 ## Files
 - `SKILL.md`
 - `references/...`
+- `references/examples/...`
+- `<any scripts/assets/schema examples created>`
+
+## Support Pack
+- References added:
+  - ...
+- Examples added:
+  - ...
+- Optional helpers added (`scripts/` or `assets/`):
+  - ...
 
 ## Trigger Examples
 - ...
@@ -148,13 +171,15 @@ Use one of these formats.
 - Prioritize operational steps over generic advice.
 - Keep descriptions concise and optimized for skill selection.
 - Explain what changed and why when applying updates.
-- Avoid auxiliary documentation files unless explicitly requested.
+- Always produce a complete support pack for created/updated skills (`references/` plus concrete examples at minimum).
+- Do not ship `SKILL.md`-only skills unless the user explicitly requests a minimal draft.
+- Keep auxiliary files purposeful, scoped, and directly helpful for execution.
 
 # Examples
 
 - Audit -> score all skills in `.agents` and prioritize P1/P2 fixes.
 - Update -> rewrite a weak `SKILL.md` into canonical structure while preserving purpose.
-- Create -> generate a narrowly scoped skill folder with triggerable docs and references.
+- Create -> generate a narrowly scoped skill folder with triggerable docs, references, concrete examples, and helper artifacts.
 
 # References
 

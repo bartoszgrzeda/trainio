@@ -17,6 +17,7 @@ import {
 } from '../components/shell/BottomMenu';
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
+import { StatusBanner } from '../components/shell/StatusBanner';
 
 type ExercisesViewState = 'default' | 'loading' | 'empty' | 'error' | 'offline';
 
@@ -302,7 +303,7 @@ export function SettingsExercisesScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.exercises.list">
         <GlobalHeader
           title="Exercises"
           leftAction={{
@@ -320,6 +321,7 @@ export function SettingsExercisesScreen({
         />
 
         <ScrollView
+          testID="scroll.exercises.list"
           contentContainerStyle={[
             styles.scrollContent,
             { paddingBottom: contentBottomPadding },
@@ -329,10 +331,15 @@ export function SettingsExercisesScreen({
               <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
             ) : undefined
           }>
+          {screenState === 'error' ? (
+            <StatusBanner tone="error" message={LOAD_EXERCISES_ERROR_MESSAGE} />
+          ) : null}
+
           <View style={styles.controlsSection}>
             <View style={styles.searchRow}>
               <View style={styles.searchInputContainer}>
                 <TextInput
+                  testID="input.exercises.search"
                   accessibilityLabel="Search exercises"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -345,6 +352,7 @@ export function SettingsExercisesScreen({
               </View>
 
               <Pressable
+                testID="button.exercises.add"
                 accessibilityLabel="Add exercise"
                 accessibilityRole="button"
                 disabled={isHardLoading}
@@ -367,10 +375,11 @@ export function SettingsExercisesScreen({
             {isHardLoading ? (
               <LoadingSkeleton rows={6} rowHeight={44} />
             ) : visibleExercises.length > 0 ? (
-              <View style={styles.listContainer}>
+              <View style={styles.listContainer} testID="list.exercises">
                 {visibleExercises.map(exercise => (
                   <Pressable
                     key={exercise.id}
+                    testID={`item.exercise.${exercise.id}`}
                     accessibilityLabel={exercise.name}
                     accessibilityRole="button"
                     onPress={() => handleOpenExerciseDetails(exercise.id)}
@@ -388,7 +397,15 @@ export function SettingsExercisesScreen({
                 ))}
               </View>
             ) : (
-              <Text style={styles.emptyText}>{emptyMessage}</Text>
+              <Text
+                style={styles.emptyText}
+                testID={
+                  allExercises.length === 0
+                    ? 'text.exercises.empty.noExercises'
+                    : 'text.exercises.empty.noMatches'
+                }>
+                {emptyMessage}
+              </Text>
             )}
           </View>
         </ScrollView>

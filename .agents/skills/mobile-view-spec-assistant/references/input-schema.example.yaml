@@ -1,0 +1,10 @@
+request:
+  mode: "single_view" # one of: single_view, sections, refinement, app_level, audit
+  target_file: "docs/views/home.view.md"
+  app_shell_file: "docs/app-shell.md"
+  goal: "Create a home dashboard screen for trainers."
+  constraints:
+    keep_screen_scope_only: true
+    include_forms: false
+  existing_content: null
+

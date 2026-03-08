@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, StatusBar, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClientListScreen } from './src/screens/ClientListScreen';
 import { ClientNewScreen } from './src/screens/ClientNewScreen';
@@ -13,6 +13,10 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 
 type StaticAppRoute =
   | '/home'
+  | '/training'
+  | '/training/start'
+  | '/training/finish'
+  | '/trainings/new'
   | '/clients'
   | '/clients/new'
   | '/settings'
@@ -60,6 +64,22 @@ function normalizeRoute(route: string): AppRoute | null {
     return '/home';
   }
 
+  if (route === '/training') {
+    return '/training';
+  }
+
+  if (route === '/training/start') {
+    return '/training/start';
+  }
+
+  if (route === '/training/finish') {
+    return '/training/finish';
+  }
+
+  if (route === '/trainings/new') {
+    return '/trainings/new';
+  }
+
   if (route === '/settings') {
     return '/settings';
   }
@@ -98,6 +118,33 @@ function normalizeRoute(route: string): AppRoute | null {
   }
 
   return null;
+}
+
+interface RoutePlaceholderScreenProps {
+  testID: string;
+  title: string;
+  onBack: () => void;
+}
+
+function RoutePlaceholderScreen({
+  testID,
+  title,
+  onBack,
+}: RoutePlaceholderScreenProps) {
+  return (
+    <View style={styles.placeholderContainer} testID={testID}>
+      <Text style={styles.placeholderTitle}>{title}</Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onBack}
+        style={({ pressed }) => [
+          styles.placeholderBackButton,
+          pressed && styles.placeholderBackButtonPressed,
+        ]}>
+        <Text style={styles.placeholderBackButtonText}>Back</Text>
+      </Pressable>
+    </View>
+  );
 }
 
 function App() {
@@ -175,6 +222,46 @@ function App() {
       : null;
 
   const renderCurrentScreen = () => {
+    if (currentRoute === '/trainings/new') {
+      return (
+        <RoutePlaceholderScreen
+          testID="screen.trainings.new"
+          title="Training Creation"
+          onBack={goBack}
+        />
+      );
+    }
+
+    if (currentRoute === '/training/start') {
+      return (
+        <RoutePlaceholderScreen
+          testID="screen.training.start"
+          title="Training Start"
+          onBack={goBack}
+        />
+      );
+    }
+
+    if (currentRoute === '/training') {
+      return (
+        <RoutePlaceholderScreen
+          testID="screen.training.inProgress"
+          title="Training In Progress"
+          onBack={goBack}
+        />
+      );
+    }
+
+    if (currentRoute === '/training/finish') {
+      return (
+        <RoutePlaceholderScreen
+          testID="screen.training.finish"
+          title="Finish Training"
+          onBack={goBack}
+        />
+      );
+    }
+
     if (currentRoute === '/clients/new') {
       return <ClientNewScreen navigation={navigation} />;
     }
@@ -234,6 +321,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F7FA',
+  },
+  placeholderContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    gap: 16,
+    backgroundColor: '#F5F7FA',
+  },
+  placeholderTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+  },
+  placeholderBackButton: {
+    minHeight: 44,
+    minWidth: 120,
+    borderRadius: 12,
+    backgroundColor: '#1D4ED8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  placeholderBackButtonPressed: {
+    backgroundColor: '#1E40AF',
+  },
+  placeholderBackButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

@@ -8,6 +8,8 @@ interface MenuItem {
   label: string;
   route: AppShellRoute;
   icon: string;
+  testID: string;
+  accessibilityLabel: string;
 }
 
 interface BottomMenuProps {
@@ -17,10 +19,34 @@ interface BottomMenuProps {
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { label: 'Home', route: '/home', icon: 'H' },
-  { label: 'Training', route: '/training', icon: 'T' },
-  { label: 'Clients', route: '/clients', icon: 'C' },
-  { label: 'Settings', route: '/settings', icon: 'S' },
+  {
+    label: 'Home',
+    route: '/home',
+    icon: 'H',
+    testID: 'tab.home',
+    accessibilityLabel: 'tab.home',
+  },
+  {
+    label: 'Training',
+    route: '/training',
+    icon: 'T',
+    testID: 'tab.training',
+    accessibilityLabel: 'tab.training',
+  },
+  {
+    label: 'Clients',
+    route: '/clients',
+    icon: 'C',
+    testID: 'tab.clients',
+    accessibilityLabel: 'tab.clients',
+  },
+  {
+    label: 'Settings',
+    route: '/settings',
+    icon: 'S',
+    testID: 'tab.settings',
+    accessibilityLabel: 'tab.settings',
+  },
 ];
 
 export const BOTTOM_MENU_HEIGHT = 72;
@@ -51,6 +77,9 @@ export function BottomMenu({
           return (
             <Pressable
               key={item.route}
+              testID={item.testID}
+              accessible
+              accessibilityLabel={item.accessibilityLabel}
               accessibilityRole="button"
               disabled={isDisabled}
               onPress={handlePress}

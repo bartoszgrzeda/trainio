@@ -1,0 +1,55 @@
+summary:
+  assumptions:
+    - App stays logged out between E2E runs when launched with delete=true.
+    - Home tab is the post-login default landing screen.
+  coverage:
+    - smoke
+    - auth
+    - navigation
+    - forms
+    - profile_settings
+generatedFiles:
+  - path: e2e/tests/smoke/app-launch.smoke.e2e.ts
+    purpose: Verifies app launch, onboarding gate, and auth entry visibility.
+  - path: e2e/tests/auth/login.happy-path.e2e.ts
+    purpose: Verifies successful login and home dashboard readiness.
+  - path: e2e/tests/auth/login.failure.e2e.ts
+    purpose: Verifies invalid credentials error behavior.
+  - path: e2e/tests/navigation/tab-navigation.e2e.ts
+    purpose: Verifies tab navigation between home/profile/settings.
+  - path: e2e/tests/profile-settings/logout.e2e.ts
+    purpose: Verifies logout returns user to login screen.
+  - path: e2e/screens/login.screen.ts
+    purpose: Reusable selectors and actions for login interactions.
+  - path: e2e/screens/home.screen.ts
+    purpose: Reusable home readiness assertions and tab navigation actions.
+  - path: e2e/helpers/session.helper.ts
+    purpose: Shared launch/login bootstrap utilities for suites.
+selectorAudit:
+  used:
+    - testId: screen.login
+      screen: Login
+    - testId: input.username
+      screen: Login
+    - testId: input.password
+      screen: Login
+    - testId: button.login.submit
+      screen: Login
+    - testId: screen.home
+      screen: Home
+    - testId: tab.profile
+      screen: HomeTabs
+    - testId: screen.profile
+      screen: Profile
+    - testId: button.logout
+      screen: Profile
+  missingRecommendations:
+    - screen: Home
+      element: Initial loading indicator
+      recommendedTestId: text.home.loading
+    - screen: Settings
+      element: Save success toast
+      recommendedTestId: text.settings.saveSuccess
+tests:
+  namingPattern: "<feature>.<flow>.e2e.ts"
+  assertionsPolicy: assert after every significant interaction
