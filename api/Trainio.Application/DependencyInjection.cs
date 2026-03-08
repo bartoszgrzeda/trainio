@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Trainio.Application.Features.Clients;
 using Trainio.Application.Features.Exercises;
+using Trainio.Application.Features.PlanTemplates;
 using Trainio.Application.Features.Profile;
 
 namespace Trainio.Application;
@@ -11,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IClientService, ClientService>();
         services.AddScoped<IExerciseService, ExerciseService>();
+        services.AddScoped<IPlanTemplateService, PlanTemplateService>();
         services.AddScoped<IProfileService, ProfileService>();
 
         return services;

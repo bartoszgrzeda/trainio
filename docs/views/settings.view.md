@@ -5,7 +5,7 @@ route: /settings
 auth: true
 layout: mobile
 title: Settings
-description: Account settings hub with quick navigation to profile, exercises, subscription, and sign-out.
+description: Account settings hub with quick navigation to profile, exercises, plan templates, subscription, and sign-out.
 ---
 
 # Settings
@@ -22,6 +22,7 @@ Authenticated trainer managing account preferences and session access.
 
 - Open profile settings.
 - Open exercises settings.
+- Open plan templates settings.
 - Open subscription settings.
 - Sign out of the app.
 
@@ -34,18 +35,20 @@ Authenticated trainer managing account preferences and session access.
 - Components:
   - Standalone button `Profile`.
   - Standalone button `Exercises`.
+  - Standalone button `Plans Templates`.
   - Standalone button `Subscription`.
   - Standalone destructive button `Sign Out`.
 - Behavior:
   - `Profile`: on tap, navigate to `settings-profile` view.
   - `Exercises`: on tap, navigate to `settings-exercises` view.
+  - `Plans Templates`: on tap, navigate to `plan-template-list` view.
   - `Subscription`: on tap, navigate to `settings-subscription` view.
   - `Sign Out`: on tap, call sign-out API and clear local auth session.
   - `Sign Out` success: navigate to auth entry route.
 - Rules:
-  - All four buttons are rendered as independent controls in a single list.
+  - All five buttons are rendered as independent controls in a single list.
   - Do not display grouping headers such as `Account` or `Session`.
-  - `Profile`, `Exercises`, and `Subscription` are always visible and enabled.
+  - `Profile`, `Exercises`, `Plans Templates`, and `Subscription` are always visible and enabled.
   - Disable `Sign Out` while sign-out request is in progress.
   - If sign-out fails, keep user on settings and show error banner.
 - Empty State: n/a.
@@ -56,6 +59,7 @@ Authenticated trainer managing account preferences and session access.
 | --- | --- | --- | --- |
 | openSettingsProfile | Profile | Tap button | Navigate to `settings-profile` view |
 | openSettingsExercises | Exercises | Tap button | Navigate to `settings-exercises` view |
+| openPlanTemplateList | Plans Templates | Tap button | Navigate to `plan-template-list` view |
 | openSettingsSubscription | Subscription | Tap button | Navigate to `settings-subscription` view |
 | signOut | Sign Out | Tap button | Invalidate session and navigate to auth route |
 
@@ -67,6 +71,7 @@ Authenticated trainer managing account preferences and session access.
   "menuItems": [
     { "id": "profile", "label": "Profile", "targetView": "settings-profile" },
     { "id": "exercises", "label": "Exercises", "targetView": "settings-exercises" },
+    { "id": "plansTemplates", "label": "Plans Templates", "targetView": "plan-template-list" },
     { "id": "subscription", "label": "Subscription", "targetView": "settings-subscription" }
   ]
 }
@@ -82,7 +87,7 @@ Authenticated trainer managing account preferences and session access.
 
 ### default
 
-All four standalone buttons are visible. Navigation buttons are enabled. `Sign Out` is enabled.
+All five standalone buttons are visible. Navigation buttons are enabled. `Sign Out` is enabled.
 
 ### loading
 
@@ -90,7 +95,7 @@ When sign-out is in progress, keep settings options visible and disable `Sign Ou
 
 ### empty
 
-Not applicable for this static menu screen. If menu configuration fails to load, fallback to local default items (`Profile`, `Exercises`, `Subscription`).
+Not applicable for this static menu screen. If menu configuration fails to load, fallback to local default items (`Profile`, `Exercises`, `Plans Templates`, `Subscription`).
 
 ### error
 
@@ -115,6 +120,7 @@ Show header warning indicator `!`; on tap show `No internet connection`. Keep na
 - Entry point: `/settings` from bottom menu.
 - `Profile` -> `settings-profile` view.
 - `Exercises` -> `settings-exercises` view.
+- `Plans Templates` -> `plan-template-list` view.
 - `Subscription` -> `settings-subscription` view.
 - `Sign Out` success -> auth entry route (for example `/auth/login`).
 
@@ -122,4 +128,4 @@ Show header warning indicator `!`; on tap show `No internet connection`. Keep na
 
 ### Assumptions (if any)
 
-- Detailed behavior of `settings-profile`, `settings-exercises`, and `settings-subscription` is defined in separate view specs.
+- Detailed behavior of `settings-profile`, `settings-exercises`, `plan-template-list`, and `settings-subscription` is defined in separate view specs.

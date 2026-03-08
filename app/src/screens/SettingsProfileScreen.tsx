@@ -672,7 +672,7 @@ export function SettingsProfileScreen({
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
-      <View style={styles.container}>
+      <View style={styles.container} testID="screen.settings.profile">
         <GlobalHeader
           title="Profile"
           leftAction={{
@@ -691,6 +691,7 @@ export function SettingsProfileScreen({
 
         <View style={styles.content}>
           <ScrollView
+            testID="scroll.settings.profile"
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
@@ -723,6 +724,7 @@ export function SettingsProfileScreen({
 
                     <View style={styles.photoActions}>
                       <Pressable
+                        testID="button.profile.uploadPhoto"
                         accessibilityRole="button"
                         disabled={isUploadDisabled}
                         onPress={() => {
@@ -744,7 +746,9 @@ export function SettingsProfileScreen({
                   </View>
 
                   {photoUploadError ? (
-                    <Text style={styles.fieldErrorText}>{photoUploadError}</Text>
+                    <Text testID="text.profile.error.photo" style={styles.fieldErrorText}>
+                      {photoUploadError}
+                    </Text>
                   ) : null}
                 </View>
 
@@ -752,6 +756,7 @@ export function SettingsProfileScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>First Name</Text>
                     <TextInput
+                      testID="input.profile.firstName"
                       autoCapitalize="words"
                       editable={!isSaving}
                       onChangeText={value => handleInputChange('firstName', value)}
@@ -760,13 +765,18 @@ export function SettingsProfileScreen({
                       value={draft?.firstName ?? ''}
                     />
                     {fieldErrors.firstName ? (
-                      <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
+                      <Text
+                        testID="text.profile.error.firstName"
+                        style={styles.fieldErrorText}>
+                        {fieldErrors.firstName}
+                      </Text>
                     ) : null}
                   </View>
 
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Last Name</Text>
                     <TextInput
+                      testID="input.profile.lastName"
                       autoCapitalize="words"
                       editable={!isSaving}
                       onChangeText={value => handleInputChange('lastName', value)}
@@ -775,7 +785,11 @@ export function SettingsProfileScreen({
                       value={draft?.lastName ?? ''}
                     />
                     {fieldErrors.lastName ? (
-                      <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
+                      <Text
+                        testID="text.profile.error.lastName"
+                        style={styles.fieldErrorText}>
+                        {fieldErrors.lastName}
+                      </Text>
                     ) : null}
                   </View>
                 </View>
@@ -784,6 +798,7 @@ export function SettingsProfileScreen({
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Email</Text>
                     <TextInput
+                      testID="input.profile.email"
                       autoCapitalize="none"
                       autoCorrect={false}
                       editable={!isSaving}
@@ -795,13 +810,18 @@ export function SettingsProfileScreen({
                       value={draft?.email ?? ''}
                     />
                     {fieldErrors.email ? (
-                      <Text style={styles.fieldErrorText}>{fieldErrors.email}</Text>
+                      <Text
+                        testID="text.profile.error.email"
+                        style={styles.fieldErrorText}>
+                        {fieldErrors.email}
+                      </Text>
                     ) : null}
                   </View>
 
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Phone Number</Text>
                     <TextInput
+                      testID="input.profile.phoneNumber"
                       autoCapitalize="none"
                       editable={!isSaving}
                       keyboardType="phone-pad"
@@ -811,7 +831,11 @@ export function SettingsProfileScreen({
                       value={draft?.phoneNumber ?? ''}
                     />
                     {fieldErrors.phoneNumber ? (
-                      <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
+                      <Text
+                        testID="text.profile.error.phoneNumber"
+                        style={styles.fieldErrorText}>
+                        {fieldErrors.phoneNumber}
+                      </Text>
                     ) : null}
                   </View>
                 </View>
@@ -821,6 +845,7 @@ export function SettingsProfileScreen({
 
           <View style={[styles.saveSection, { paddingBottom: saveSectionBottomPadding }]}>
             <Pressable
+              testID="button.profile.save"
               accessibilityRole="button"
               disabled={isSaveDisabled}
               onPress={handleSavePress}

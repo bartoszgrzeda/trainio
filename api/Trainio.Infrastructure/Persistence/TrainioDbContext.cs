@@ -1,12 +1,18 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Trainio.Domain.Features.Clients;
 using Trainio.Domain.Features.Exercises;
+using Trainio.Domain.Features.PlanTemplates;
 using Trainio.Domain.Features.Profile;
+using Trainio.Domain.ValueObjects;
 
 namespace Trainio.Infrastructure.Persistence;
 
 public sealed class TrainioDbContext : DbContext
 {
+    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+
     public TrainioDbContext(DbContextOptions<TrainioDbContext> options)
         : base(options)
     {
@@ -15,6 +21,8 @@ public sealed class TrainioDbContext : DbContext
     public DbSet<Client> Clients => Set<Client>();
 
     public DbSet<Exercise> Exercises => Set<Exercise>();
+
+    public DbSet<PlanTemplate> PlanTemplates => Set<PlanTemplate>();
 
     public DbSet<Profile> Profiles => Set<Profile>();
 
@@ -71,6 +79,32 @@ public sealed class TrainioDbContext : DbContext
 
         });
 
+        modelBuilder.Entity<PlanTemplate>(builder =>
+        {
+            builder.ToTable("plan_templates");
+            builder.HasKey(x => x.Id);
+            builder.Ignore(x => x.Days);
+
+            builder.OwnsOne(x => x.Name, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("Name").HasMaxLength(200).IsRequired();
+            });
+
+            var daysComparer = new ValueComparer<List<PlanDay>>(
+                (left, right) => SerializeDays(left) == SerializeDays(right),
+                value => SerializeDays(value).GetHashCode(StringComparison.Ordinal),
+                value => DeserializeDays(SerializeDays(value)));
+
+            builder
+                .Property<List<PlanDay>>("_days")
+                .HasColumnName("Days")
+                .HasConversion(
+                    value => SerializeDays(value),
+                    value => DeserializeDays(value))
+                .Metadata
+                .SetValueComparer(daysComparer);
+        });
+
         modelBuilder.Entity<Profile>(builder =>
         {
             builder.ToTable("profiles");
@@ -96,5 +130,20 @@ public sealed class TrainioDbContext : DbContext
                 owned.Property(x => x.Value).HasColumnName("PhoneNumber").HasMaxLength(64).IsRequired();
             });
         });
+    }
+
+    private static string SerializeDays(List<PlanDay>? days)
+    {
+        return JsonSerializer.Serialize(days ?? [], SerializerOptions);
+    }
+
+    private static List<PlanDay> DeserializeDays(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        return JsonSerializer.Deserialize<List<PlanDay>>(json, SerializerOptions) ?? [];
     }
 }

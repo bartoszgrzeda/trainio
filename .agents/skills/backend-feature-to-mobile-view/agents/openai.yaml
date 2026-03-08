@@ -1,0 +1,4 @@
+interface:
+  display_name: "Backend Feature to Mobile View"
+  short_description: "Orchestrate backend-to-mobile spec and RN generation"
+  default_prompt: "Use $backend-feature-to-mobile-view to turn an existing backend feature into a structured mobile view spec and then generate the matching React Native screen implementation."

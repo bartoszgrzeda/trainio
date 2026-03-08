@@ -1,0 +1,50 @@
+feature_name: "Class Check-In"
+target_view:
+  file_path: "docs/views/class-checkin.view.md"
+  route: "/classes/:id/checkin"
+  auth: "coach"
+app_shell_path: "docs/app-shell.md"
+backend_source_of_truth:
+  endpoints:
+    - method: "GET"
+      path: "/api/classes/{classId}/attendees"
+    - method: "POST"
+      path: "/api/classes/{classId}/checkins"
+  contracts:
+    request_fields:
+      - name: "memberId"
+        type: "uuid"
+        required: true
+      - name: "note"
+        type: "string"
+        required: false
+        max_length: 160
+    response_fields:
+      - name: "checkInId"
+        type: "uuid"
+      - name: "checkedAtUtc"
+        type: "datetime"
+  business_rules:
+    - "Member can be checked in once per class."
+    - "Cannot check in canceled class."
+  state_model:
+    states:
+      - "initial"
+      - "loading_attendees"
+      - "ready"
+      - "submitting"
+      - "checked_in"
+      - "duplicate_checkin_error"
+      - "class_canceled_error"
+  errors:
+    - http_status: 409
+      code: "DUPLICATE_CHECKIN"
+      presentation: "inline_member_row_error"
+    - http_status: 422
+      code: "CLASS_CANCELED"
+      presentation: "top_banner"
+optional:
+  reusable_components:
+    - "MemberRow"
+    - "BannerMessage"
+    - "PrimaryFooterButton"

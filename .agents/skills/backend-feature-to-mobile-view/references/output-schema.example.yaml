@@ -1,0 +1,67 @@
+result:
+  interpretation:
+    summary: "Generated backend-aligned mobile view spec and RN implementation for Workout Plan Creation."
+    source_of_truth: "backend_contracts"
+  backend_contract_digest:
+    endpoints:
+      - "GET /api/workout-plan-templates"
+      - "POST /api/workout-plans"
+    key_constraints:
+      - "Name length: 3-100"
+      - "Plan name unique per coach"
+      - "Template cannot be archived"
+    backend_states:
+      - "idle"
+      - "submitting"
+      - "created"
+      - "validation_failed"
+      - "conflict_failed"
+  ux_mapping:
+    state_mapping:
+      - backend_state: "idle"
+        ui_state: "default"
+      - backend_state: "submitting"
+        ui_state: "loading"
+      - backend_state: "created"
+        ui_state: "success"
+      - backend_state: "validation_failed"
+        ui_state: "failure_validation"
+      - backend_state: "conflict_failed"
+        ui_state: "failure_conflict"
+    action_mapping:
+      - action: "Submit"
+        api_call: "POST /api/workout-plans"
+        success_navigation: "/workout-plans/:id"
+        failure_feedback: "Inline + form summary errors"
+  delegation_summary:
+    mobile_view_spec_assistant:
+      mode: "single_view"
+      target_file: "docs/views/workout-plan-create.view.md"
+      refinement_passes: 1
+      output_status: "completed"
+    rn_view_generator:
+      app_shell: "docs/app-shell.md"
+      view_spec: "docs/views/workout-plan-create.view.md"
+      output_status: "completed"
+  generated_or_updated_files:
+    - path: "docs/views/workout-plan-create.view.md"
+      purpose: "Feature-level mobile view spec"
+    - path: "app/src/screens/WorkoutPlanCreateScreen.tsx"
+      purpose: "RN screen implementation with state/validation handling"
+    - path: "app/e2e/tests/workout-plans.create.e2e.ts"
+      purpose: "Detox flow for creation happy-path and conflict error"
+  constraint_preservation_report:
+    preserved:
+      - "Exact API method/path preserved"
+      - "Name uniqueness conflict surfaced in UI"
+      - "Validation constraints mapped to field-level checks"
+    deviations: []
+  verification:
+    - command: "npm run lint"
+      result: "passed"
+    - command: "npx tsc --noEmit"
+      result: "passed"
+    - command: "npm run e2e:test:ios"
+      result: "passed"
+  assumptions: []
+  failure_handling_notes: []

@@ -7,6 +7,9 @@ import { ClientScreen } from './src/screens/ClientScreen';
 import { ExerciseScreen } from './src/screens/ExerciseScreen';
 import { ExerciseNewScreen } from './src/screens/ExerciseNewScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { PlanTemplateListScreen } from './src/screens/PlanTemplateListScreen';
+import { PlanTemplateNewScreen } from './src/screens/PlanTemplateNewScreen';
+import { PlanTemplateScreen } from './src/screens/PlanTemplateScreen';
 import { SettingsExercisesScreen } from './src/screens/SettingsExercisesScreen';
 import { SettingsProfileScreen } from './src/screens/SettingsProfileScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
@@ -22,12 +25,19 @@ type StaticAppRoute =
   | '/settings'
   | '/settings/profile'
   | '/settings/exercises'
-  | '/settings/exercises/new';
+  | '/settings/exercises/new'
+  | '/settings/plan-templates'
+  | '/settings/plan-templates/new';
 
 type ExerciseDetailsRoute = `/settings/exercises/${string}`;
 type ClientDetailsRoute = `/clients/${string}`;
+type PlanTemplateDetailsRoute = `/settings/plan-templates/${string}`;
 
-type AppRoute = StaticAppRoute | ExerciseDetailsRoute | ClientDetailsRoute;
+type AppRoute =
+  | StaticAppRoute
+  | ExerciseDetailsRoute
+  | ClientDetailsRoute
+  | PlanTemplateDetailsRoute;
 
 function normalizeExerciseDetailsRoute(route: string): ExerciseDetailsRoute | null {
   const match = route.match(/^\/settings\/exercises\/([^/]+)$/);
@@ -57,6 +67,21 @@ function normalizeClientDetailsRoute(route: string): ClientDetailsRoute | null {
   }
 
   return `/clients/${encodeURIComponent(normalizedClientId)}`;
+}
+
+function normalizePlanTemplateDetailsRoute(route: string): PlanTemplateDetailsRoute | null {
+  const match = route.match(/^\/settings\/plan-templates\/([^/]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const decodedPlanTemplateId = decodeURIComponent(match[1] ?? '');
+  const normalizedPlanTemplateId = decodedPlanTemplateId.trim();
+  if (!normalizedPlanTemplateId || normalizedPlanTemplateId.toLowerCase() === 'new') {
+    return null;
+  }
+
+  return `/settings/plan-templates/${encodeURIComponent(normalizedPlanTemplateId)}`;
 }
 
 function normalizeRoute(route: string): AppRoute | null {
@@ -105,6 +130,22 @@ function normalizeRoute(route: string): AppRoute | null {
     route === 'exercise-new'
   ) {
     return '/settings/exercises/new';
+  }
+
+  if (
+    route === '/settings/plan-templates' ||
+    route === 'plan-template-list'
+  ) {
+    return '/settings/plan-templates';
+  }
+
+  if (route === '/settings/plan-templates/new') {
+    return '/settings/plan-templates/new';
+  }
+
+  const planTemplateDetailsRoute = normalizePlanTemplateDetailsRoute(route);
+  if (planTemplateDetailsRoute) {
+    return planTemplateDetailsRoute;
   }
 
   const clientDetailsRoute = normalizeClientDetailsRoute(route);
@@ -220,6 +261,12 @@ function App() {
     currentRoute !== '/clients/new'
       ? decodeURIComponent(clientDetailsRouteMatch[1] ?? '')
       : null;
+  const planTemplateDetailsRouteMatch = currentRoute.match(/^\/settings\/plan-templates\/([^/]+)$/);
+  const planTemplateIdFromRoute =
+    planTemplateDetailsRouteMatch &&
+    currentRoute !== '/settings/plan-templates/new'
+      ? decodeURIComponent(planTemplateDetailsRouteMatch[1] ?? '')
+      : null;
 
   const renderCurrentScreen = () => {
     if (currentRoute === '/trainings/new') {
@@ -293,6 +340,23 @@ function App() {
 
     if (currentRoute === '/settings/exercises/new') {
       return <ExerciseNewScreen navigation={navigation} />;
+    }
+
+    if (currentRoute === '/settings/plan-templates') {
+      return <PlanTemplateListScreen navigation={navigation} />;
+    }
+
+    if (currentRoute === '/settings/plan-templates/new') {
+      return <PlanTemplateNewScreen navigation={navigation} />;
+    }
+
+    if (planTemplateIdFromRoute) {
+      return (
+        <PlanTemplateScreen
+          navigation={navigation}
+          planTemplateId={planTemplateIdFromRoute}
+        />
+      );
     }
 
     if (exerciseIdFromRoute) {

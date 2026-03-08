@@ -25,12 +25,16 @@ type SettingsViewState =
   | 'offline'
   | 'disabled';
 
-type SettingsMenuId = 'profile' | 'exercises' | 'subscription';
+type SettingsMenuId = 'profile' | 'exercises' | 'plansTemplates' | 'subscription';
 
 interface SettingsMenuItem {
   id: SettingsMenuId;
   label: string;
-  targetView: 'settings-profile' | 'settings-exercises' | 'settings-subscription';
+  targetView:
+    | 'settings-profile'
+    | 'settings-exercises'
+    | 'plan-template-list'
+    | 'settings-subscription';
 }
 
 interface NavigationLike {
@@ -64,6 +68,11 @@ const DEFAULT_MENU_ITEMS: SettingsMenuItem[] = [
     id: 'exercises',
     label: 'Exercises',
     targetView: 'settings-exercises',
+  },
+  {
+    id: 'plansTemplates',
+    label: 'Plans Templates',
+    targetView: 'plan-template-list',
   },
   {
     id: 'subscription',
@@ -357,6 +366,7 @@ export function SettingsScreen({
               { paddingBottom: signOutBottomPadding },
             ]}>
             <Pressable
+              testID="button.settings.signOut"
               accessibilityRole="button"
               disabled={isSignOutDisabled}
               onPress={handleSignOutPress}
