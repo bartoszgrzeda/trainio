@@ -17,7 +17,6 @@ import {
 } from '../components/shell/BottomMenu';
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
-import { StatusBanner } from '../components/shell/StatusBanner';
 
 type ExercisesViewState = 'default' | 'loading' | 'empty' | 'error' | 'offline';
 
@@ -154,7 +153,7 @@ async function fetchExercises(query: string): Promise<ExerciseItem[]> {
     includeSeeded: 'true',
   });
 
-  const response = await fetch(`${API_BASE_URL}/exercises/list?${params.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/api/exercises/list?${params.toString()}`);
 
   if (!response.ok) {
     throw createApiError(response.status, LOAD_EXERCISES_ERROR_MESSAGE);
@@ -285,8 +284,10 @@ export function SettingsExercisesScreen({
     [navigateToRoute],
   );
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    Alert.alert(
+      screenState === 'error' ? LOAD_EXERCISES_ERROR_MESSAGE : OFFLINE_MESSAGE,
+    );
+  }, [screenState]);
 
   const isHardLoading =
     screenState === 'loading' && cacheRef.current == null && allExercises.length === 0;
@@ -309,7 +310,7 @@ export function SettingsExercisesScreen({
             onPress: navigateBack,
           }}
           statusIndicator={
-            screenState === 'offline'
+            screenState === 'offline' || screenState === 'error'
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,
@@ -328,10 +329,6 @@ export function SettingsExercisesScreen({
               <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
             ) : undefined
           }>
-          {screenState === 'error' ? (
-            <StatusBanner tone="error" message={LOAD_EXERCISES_ERROR_MESSAGE} />
-          ) : null}
-
           <View style={styles.controlsSection}>
             <View style={styles.searchRow}>
               <View style={styles.searchInputContainer}>

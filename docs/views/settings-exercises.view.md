@@ -23,7 +23,7 @@ Authenticated trainer managing the exercise library used in training plans.
 - Go back to settings.
 - Add a new custom exercise.
 - Search exercises by name.
-- Open a selected exercise in `settings-exercise-details` view.
+- Open a selected exercise in `exercise` view.
 
 ## Sections
 
@@ -65,13 +65,13 @@ Authenticated trainer managing the exercise library used in training plans.
 - Behavior:
   - On screen open, fetch exercise list (seeded and custom).
   - Typing in search filters list by `name` (case-insensitive, partial match).
-  - Tapping a row navigates to `settings-exercise-details` for selected `exerciseId`.
+  - Tapping a row navigates to `exercise` view for selected `exerciseId`.
   - Pull-to-refresh reloads exercise list.
 - Rules:
   - Include seeded and custom entries in one merged list.
   - Do not display extra row metadata (muscle group, equipment, tags).
   - Sort visible rows by `name` ascending.
-  - Preserve current `searchQuery` when returning from `settings-exercise-details` in the same session.
+  - Preserve current `searchQuery` when returning from `exercise` view in the same session.
 - Empty State:
   - No exercises in system: `No exercises yet. Add your first exercise.`
   - No search matches: `No exercises found.`
@@ -84,7 +84,7 @@ Authenticated trainer managing the exercise library used in training plans.
 | goBackToSettings | Back | Tap header back button | Navigate to `/settings` |
 | openAddExercise | + | Tap add button | Navigate to `/settings/exercises/new` |
 | updateExerciseSearch | n/a | User types in search input | Filter visible exercises list |
-| openExerciseDetails | Exercise row | Tap row | Navigate to `settings-exercise-details` with selected `exerciseId` |
+| openExerciseDetails | Exercise row | Tap row | Navigate to `exercise` view with selected `exerciseId` |
 
 ## Data Model
 
@@ -150,11 +150,11 @@ Show header warning indicator `!`; on tap show `No internet connection`. If cach
 - Entry point: `/settings/exercises` from settings view.
 - Header back button -> `/settings`.
 - `+` add button -> `/settings/exercises/new`.
-- Exercise row tap -> `settings-exercise-details` view (for example `/settings/exercises/{exerciseId}`).
+- Exercise row tap -> `exercise` view (for example `/settings/exercises/{exerciseId}`).
 
 ## Notes
 
 ### Assumptions (if any)
 
 - API returns seeded and custom exercises in one list when `includeSeeded=true`.
-- `settings-exercise-details` and exercise creation views are defined in separate specs.
+- `exercise` and `exercise-new` views are defined in separate specs.

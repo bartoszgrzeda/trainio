@@ -1,82 +1,113 @@
+using System.Text.Json.Serialization;
 using Trainio.Domain.Common;
+using Trainio.Domain.ValueObjects;
 
 namespace Trainio.Domain.Features.Clients;
 
-public sealed class Client
+public sealed class Client : BaseEntity
 {
     private Client()
     {
-        FirstName = string.Empty;
-        LastName = string.Empty;
-        PhoneNumber = string.Empty;
-        Gender = string.Empty;
-        Notes = string.Empty;
+        FirstName = null!;
+        LastName = null!;
+        BirthDate = null!;
+        PhoneNumber = null!;
+        Gender = null!;
+        Notes = null!;
     }
 
+    [JsonConstructor]
     private Client(
         Guid id,
-        string firstName,
-        string lastName,
-        DateOnly birthDate,
-        string phoneNumber,
-        string gender,
-        string notes)
+        FirstName firstName,
+        LastName lastName,
+        BirthDate birthDate,
+        PhoneNumber phoneNumber,
+        Gender gender,
+        Notes notes)
+        : base(id)
     {
-        Id = id;
-        FirstName = firstName;
-        LastName = lastName;
-        BirthDate = birthDate;
-        PhoneNumber = phoneNumber;
-        Gender = gender;
-        Notes = notes;
+        FirstName = Require(firstName, nameof(firstName));
+        LastName = Require(lastName, nameof(lastName));
+        BirthDate = Require(birthDate, nameof(birthDate));
+        PhoneNumber = Require(phoneNumber, nameof(phoneNumber));
+        Gender = Require(gender, nameof(gender));
+        Notes = Require(notes, nameof(notes));
     }
 
-    public Guid Id { get; private set; }
+    public FirstName FirstName { get; private set; }
 
-    public string FirstName { get; private set; }
+    public LastName LastName { get; private set; }
 
-    public string LastName { get; private set; }
+    public BirthDate BirthDate { get; private set; }
 
-    public DateOnly BirthDate { get; private set; }
+    public PhoneNumber PhoneNumber { get; private set; }
 
-    public string PhoneNumber { get; private set; }
+    public Gender Gender { get; private set; }
 
-    public string Gender { get; private set; }
+    public Notes Notes { get; private set; }
 
-    public string Notes { get; private set; }
+    public string FullName => $"{FirstName.Value} {LastName.Value}";
 
-    public string FullName => $"{FirstName} {LastName}";
-
-    public static Client Create(
-        string firstName,
-        string lastName,
-        DateOnly birthDate,
-        string phoneNumber,
-        string gender,
-        string notes)
+    public static Client From(
+        FirstName firstName,
+        LastName lastName,
+        BirthDate birthDate,
+        PhoneNumber phoneNumber,
+        Gender gender,
+        Notes notes)
     {
-        var normalizedFirstName = Require(firstName, nameof(firstName));
-        var normalizedLastName = Require(lastName, nameof(lastName));
-        var normalizedPhoneNumber = Require(phoneNumber, nameof(phoneNumber));
-        var normalizedGender = Require(gender, nameof(gender));
-
         return new Client(
             Guid.NewGuid(),
-            normalizedFirstName,
-            normalizedLastName,
+            firstName,
+            lastName,
             birthDate,
-            normalizedPhoneNumber,
-            normalizedGender,
-            notes?.Trim() ?? string.Empty);
+            phoneNumber,
+            gender,
+            notes);
     }
 
-    private static string Require(string value, string fieldName)
+    public static Client Create(
+        FirstName firstName,
+        LastName lastName,
+        BirthDate birthDate,
+        PhoneNumber phoneNumber,
+        Gender gender,
+        Notes notes)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        return From(firstName, lastName, birthDate, phoneNumber, gender, notes);
+    }
+
+    public void Update(
+        FirstName firstName,
+        LastName lastName,
+        BirthDate birthDate,
+        PhoneNumber phoneNumber,
+        Gender gender,
+        Notes notes)
+    {
+        var validatedFirstName = Require(firstName, nameof(firstName));
+        var validatedLastName = Require(lastName, nameof(lastName));
+        var validatedBirthDate = Require(birthDate, nameof(birthDate));
+        var validatedPhoneNumber = Require(phoneNumber, nameof(phoneNumber));
+        var validatedGender = Require(gender, nameof(gender));
+        var validatedNotes = Require(notes, nameof(notes));
+
+        FirstName = validatedFirstName;
+        LastName = validatedLastName;
+        BirthDate = validatedBirthDate;
+        PhoneNumber = validatedPhoneNumber;
+        Gender = validatedGender;
+        Notes = validatedNotes;
+    }
+
+    private static T Require<T>(T? value, string fieldName) where T : class
+    {
+        if (value is null)
         {
             throw new DomainException($"{fieldName} is required.");
         }
 
-        return value.Trim();
+        return value;
     }
 }

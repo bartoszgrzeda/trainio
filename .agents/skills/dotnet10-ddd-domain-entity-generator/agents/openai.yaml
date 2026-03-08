@@ -1,4 +1,4 @@
 interface:
   display_name: "Dotnet 10 DDD Entity Generator"
-  short_description: "Generate DDD domain entities, EF config, and tests"
-  default_prompt: "Use $dotnet10-ddd-domain-entity-generator to generate a .NET 10 domain entity, EF Core configuration, and unit tests from my entity specification."
+  short_description: "Generate VO-first DDD entities, EF config, and tests"
+  default_prompt: "Use $dotnet10-ddd-domain-entity-generator to generate a .NET 10 domain entity that uses value-object business properties and VO-only entity APIs, plus EF Core configuration and unit tests."

@@ -52,7 +52,7 @@ public sealed class PhoneNumberTests
         var json = JsonSerializer.Serialize(valueObject);
         var restored = JsonSerializer.Deserialize<PhoneNumber>(json);
 
-        json.Should().Be("\"+48123456789\"");
+        json.Should().BeOneOf("\"+48123456789\"", "\"\\u002B48123456789\"");
         restored.Should().Be(valueObject);
     }
 }

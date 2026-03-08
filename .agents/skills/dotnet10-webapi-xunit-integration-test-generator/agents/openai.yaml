@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dotnet 10 Web API Integration Test Generator"
+  short_description: "Generate xUnit integration tests for ASP.NET Core Web APIs"
+  default_prompt: "Use $dotnet10-webapi-xunit-integration-test-generator to generate or update production-quality .NET 10 ASP.NET Core Web API integration tests with WebApplicationFactory and HttpClient."

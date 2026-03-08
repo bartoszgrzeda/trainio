@@ -215,6 +215,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const [homeData, setHomeData] = useState<HomeData | null>(null);
   const [screenState, setScreenState] = useState<HomeViewState>('loading');
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [loadWarningDetails, setLoadWarningDetails] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [isStartingTraining, setIsStartingTraining] = useState(false);
 
@@ -244,19 +245,20 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
       cacheRef.current = data;
       setHomeData(data);
       setScreenState(resolveScreenState(data));
+      setLoadWarningDetails(null);
     } catch (error) {
       if (isOfflineError(error)) {
         setScreenState('offline');
         if (cacheRef.current) {
           setHomeData(cacheRef.current);
         }
-        setBannerMessage(OFFLINE_MESSAGE);
+        setLoadWarningDetails(null);
       } else {
         setScreenState(cacheRef.current ? resolveScreenState(cacheRef.current) : 'error');
         if (cacheRef.current) {
           setHomeData(cacheRef.current);
         }
-        setBannerMessage(LOAD_ERROR_MESSAGE);
+        setLoadWarningDetails(LOAD_ERROR_MESSAGE);
       }
     } finally {
       if (isRefresh) {
@@ -291,7 +293,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     }
 
     if (screenState === 'offline') {
-      setBannerMessage(OFFLINE_MESSAGE);
+      setLoadWarningDetails(null);
       return;
     }
 
@@ -329,6 +331,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
 
       if (isOfflineError(error)) {
         setScreenState('offline');
+        setLoadWarningDetails(null);
       }
 
       if (isInvalidNextTrainingError(error)) {
@@ -344,8 +347,13 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   }, [handleStartTraining]);
 
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    const statusMessage =
+      screenState === 'offline'
+        ? OFFLINE_MESSAGE
+        : loadWarningDetails ?? OFFLINE_MESSAGE;
+
+    Alert.alert(statusMessage);
+  }, [loadWarningDetails, screenState]);
 
   const trainings = homeData?.trainings ?? [];
   const nextTraining = homeData?.nextTraining ?? null;
@@ -367,7 +375,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         <GlobalHeader
           title="Home"
           statusIndicator={
-            screenState === 'offline'
+            screenState === 'offline' || loadWarningDetails
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,

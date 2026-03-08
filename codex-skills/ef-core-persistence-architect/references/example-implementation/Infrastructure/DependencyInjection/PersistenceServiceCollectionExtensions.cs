@@ -18,8 +18,7 @@ public static class PersistenceServiceCollectionExtensions
             options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
         });
 
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-        services.AddScoped(typeof(IPagedRepository<>), typeof(Repository<>));
+        services.AddScoped<IRepositoryFactory, RepositoryFactory>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;

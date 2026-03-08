@@ -1,6 +1,6 @@
 ---
 name: ef-core-persistence-architect
-description: Implement and maintain Entity Framework Core persistence architecture in C#/.NET production codebases. Use when creating or refactoring entities, repositories, Unit of Work, DbContext, entity configurations, dependency injection wiring, migration-safe persistence changes, query safety improvements, or pagination support. Trigger for tasks mentioning EF Core, DbContext, repository pattern, Unit of Work, entity mapping, persistence infrastructure, or database access behavior. Do not use for frontend/UI work, styling, presentation concerns, or non-persistence-only business logic changes.
+description: Implement and maintain Entity Framework Core persistence architecture in C#/.NET production codebases. Use when creating or refactoring entities, generic repositories, repository factories, Unit of Work, DbContext, entity configurations, dependency injection wiring, migration-safe persistence changes, or query safety improvements. Trigger for tasks mentioning EF Core, DbContext, repository pattern, repository factory, Unit of Work, entity mapping, persistence infrastructure, or database access behavior. Do not use for frontend/UI work, styling, presentation concerns, or non-persistence-only business logic changes.
 ---
 
 # EF Core Persistence Architect
@@ -13,16 +13,18 @@ Apply this skill to evolve persistence code safely, incrementally, and idempoten
 - Reuse existing persistence primitives before creating new ones.
 - Prefer extending existing classes and interfaces over generating parallel implementations.
 - Keep behavior migration-safe and compile-safe.
-- Keep repository methods asynchronous and cancellation-token aware.
+- Keep repository query/add methods asynchronous and cancellation-token aware.
 - Keep repository methods free of `SaveChanges` calls.
 - Keep deletes as hard deletes.
+- Keep commits in application services through Unit of Work.
 
 ## Required Architecture Targets
 
 Enforce or adapt to these architectural elements:
 
 - Base entity (`Entity`) with `Guid Id`
-- Generic repository (`Repository<T> where T : Entity`)
+- Generic repository (`IRepository<T>`, `EfRepository<T> where T : Entity`)
+- Repository factory (`IRepositoryFactory`, `RepositoryFactory`)
 - Unit of Work (`IUnitOfWork`, `UnitOfWork`)
 - Application `DbContext` (prefer `AppDbContext : DbContext`)
 - Entity configurations via `IEntityTypeConfiguration<T>`
@@ -43,6 +45,7 @@ Run this sequence before writing code.
 - Locate `DbContext` implementations.
 - Locate base entity type (for example `Entity`, `BaseEntity`, `AggregateRoot`).
 - Locate existing repository abstractions and implementations.
+- Locate existing repository factory abstractions and implementations.
 - Locate Unit of Work abstractions and implementations.
 - Locate existing DI registration entry points.
 
@@ -63,6 +66,7 @@ Run this sequence before writing code.
 
 - If base entity already exists, reuse it.
 - If repository abstraction already exists, extend it to required API rather than introducing a second abstraction.
+- If repository factory abstraction already exists, extend it rather than introducing duplicates.
 - If Unit of Work already exists, align method signatures with required behavior.
 - If DbContext already exists, add missing `DbSet<TEntity>` members and configuration wiring there.
 - If configuration style already exists (fluent API in context vs separate classes), prefer current style unless separate configuration classes are already dominant or required by project policy.
@@ -75,54 +79,62 @@ Run this sequence before writing code.
 
 ## Repository Contract Rules
 
-Expose this repository API exactly (plus optional pagination extension):
+Expose this repository API exactly:
 
 ```csharp
 Task<T?> GetByIdAsync(
     Guid id,
-    CancellationToken cancellationToken = default);
-
-Task<T?> GetByQueryAsync(
-    Expression<Func<T, bool>> predicate,
-    CancellationToken cancellationToken = default);
+    CancellationToken cancellationToken);
 
 Task<IReadOnlyList<T>> GetAllAsync(
-    CancellationToken cancellationToken = default);
+    CancellationToken cancellationToken);
 
-Task UpdateAsync(
-    T entity,
-    CancellationToken cancellationToken = default);
+Task<IReadOnlyList<T>> GetByQueryAsync(
+    Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken);
 
-Task DeleteAsync(
+Task<bool> ExistsByQueryAsync(
+    Expression<Func<T, bool>> predicate,
+    CancellationToken cancellationToken);
+
+Task AddAsync(
     T entity,
-    CancellationToken cancellationToken = default);
+    CancellationToken cancellationToken);
+
+void Update(T entity);
+
+void Delete(T entity);
 ```
 
-Optional pagination extension:
+## Repository Factory Rules
 
 ```csharp
-Task<IReadOnlyList<T>> GetPagedAsync(
-    int page,
-    int pageSize,
-    CancellationToken cancellationToken = default);
+public interface IRepositoryFactory
+{
+    IRepository<T> Get<T>() where T : Entity;
+}
 ```
+
+- Implement `RepositoryFactory` with the active `DbContext` dependency.
+- Construct repositories directly in `Get<T>()` (`new EfRepository<T>(_dbContext)`).
+- Do not introduce open-generic DI registration for `IRepository<>` when constructor-based factory is used.
 
 ## Repository Implementation Rules
 
-- Implement `Repository<T> where T : Entity` (or the project equivalent base entity).
+- Implement `EfRepository<T> where T : Entity` (or project-equivalent naming).
 - Back implementation with `DbSet<T>`.
 - Use `AsNoTracking()` by default for read operations.
-- Make `GetByIdAsync` and `GetByQueryAsync` return one entity or `null`.
-- Make `UpdateAsync` mark entity as modified and never call `SaveChanges`.
-- Make `DeleteAsync` remove entity from context and never call `SaveChanges`.
-- Keep every method asynchronous where feasible and accept `CancellationToken`.
+- Make `GetByQueryAsync` return a list and keep filtering server-side.
+- Make `ExistsByQueryAsync` use `AnyAsync`.
+- Make `Update` and `Delete` synchronous state operations and never call `SaveChanges`.
+- Keep query/add methods asynchronous and cancellation-token aware.
 - Use hard deletes only.
 
 ## Unit Of Work Rules
 
 - Provide `IUnitOfWork` and `UnitOfWork` (or align existing equivalents).
 - Wrap the active `DbContext` instance.
-- Expose `Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)`.
+- Expose `Task SaveChangesAsync(CancellationToken cancellationToken)`.
 - Keep Unit of Work free of domain/business logic.
 
 ## DbContext Rules
@@ -231,14 +243,14 @@ Application/
 ## Implementation Procedure
 
 1. Analyze and catalog existing persistence assets.
-2. Decide reuse-vs-create for base entity, repository, Unit of Work, and DbContext.
+2. Decide reuse-vs-create for base entity, repository, repository factory, Unit of Work, and DbContext.
 3. Patch repository abstraction to required API.
 4. Patch repository implementation (`DbSet<T>`, no `SaveChanges`, hard delete).
-5. Patch or create Unit of Work wrapper.
-6. Patch DbContext with missing `DbSet<TEntity>` and configuration scanning.
-7. Patch or create entity configurations with keys, constraints, indexes, and relationships.
-8. Patch DI registration.
-9. Add optional pagination method if requested by task scope.
+5. Patch or create repository factory (`Get<T>() => new EfRepository<T>(_dbContext)`).
+6. Patch or create Unit of Work wrapper.
+7. Patch DbContext with missing `DbSet<TEntity>` and configuration scanning.
+8. Patch or create entity configurations with keys, constraints, indexes, and relationships.
+9. Patch DI registration (factory + Unit of Work).
 10. Verify idempotency and compile safety.
 
 ## Validation Checklist
@@ -247,11 +259,13 @@ Complete before finishing:
 
 - Build succeeds.
 - No duplicate base entity/repository/UoW types introduced.
+- No duplicate repository factory types introduced.
 - Repository methods match required signatures.
 - Repository implementation contains no `SaveChanges` invocation.
 - `DbSet<TEntity>` exists for each discovered entity.
 - Configurations are applied via context.
-- DI registration includes repository and Unit of Work.
+- DI registration includes repository factory and Unit of Work.
+- Application command flows commit through Unit of Work.
 - Deletes are hard deletes.
 - Read queries default to no tracking.
 
@@ -262,7 +276,9 @@ Load these only when needed:
 - `references/example-implementation/Domain/Entities/Entity.cs`
 - `references/example-implementation/Domain/Entities/User.cs`
 - `references/example-implementation/Infrastructure/Persistence/Repositories/IRepository.cs`
-- `references/example-implementation/Infrastructure/Persistence/Repositories/Repository.cs`
+- `references/example-implementation/Infrastructure/Persistence/Repositories/IRepositoryFactory.cs`
+- `references/example-implementation/Infrastructure/Persistence/Repositories/EfRepository.cs`
+- `references/example-implementation/Infrastructure/Persistence/Repositories/RepositoryFactory.cs`
 - `references/example-implementation/Infrastructure/Persistence/UnitOfWork/IUnitOfWork.cs`
 - `references/example-implementation/Infrastructure/Persistence/UnitOfWork/UnitOfWork.cs`
 - `references/example-implementation/Infrastructure/Persistence/AppDbContext.cs`

@@ -16,7 +16,7 @@ public sealed class TrainioDbContext : DbContext
 
     public DbSet<Exercise> Exercises => Set<Exercise>();
 
-    public DbSet<UserProfile> Profiles => Set<UserProfile>();
+    public DbSet<Profile> Profiles => Set<Profile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,13 +24,37 @@ public sealed class TrainioDbContext : DbContext
         {
             builder.ToTable("clients");
             builder.HasKey(x => x.Id);
+            builder.Ignore(x => x.FullName);
 
-            builder.Property(x => x.FirstName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.LastName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.BirthDate).HasColumnType("date");
-            builder.Property(x => x.PhoneNumber).HasMaxLength(64).IsRequired();
-            builder.Property(x => x.Gender).HasMaxLength(32).IsRequired();
-            builder.Property(x => x.Notes).HasMaxLength(2048);
+            builder.OwnsOne(x => x.FirstName, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("FirstName").HasMaxLength(128).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.LastName, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("LastName").HasMaxLength(128).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.BirthDate, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("BirthDate").HasColumnType("date").IsRequired();
+            });
+
+            builder.OwnsOne(x => x.PhoneNumber, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("PhoneNumber").HasMaxLength(64).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.Gender, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("Gender").HasMaxLength(32).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.Notes, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("Notes").HasMaxLength(2000).IsRequired();
+            });
         });
 
         modelBuilder.Entity<Exercise>(builder =>
@@ -38,21 +62,39 @@ public sealed class TrainioDbContext : DbContext
             builder.ToTable("exercises");
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.Name).HasMaxLength(256).IsRequired();
+            builder.OwnsOne(x => x.ExerciseName, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("name").HasMaxLength(200).IsRequired();
+            });
+
             builder.Property(x => x.Source).HasConversion<string>().HasMaxLength(32).IsRequired();
 
-            builder.HasIndex(x => new { x.Name, x.Source }).IsUnique();
         });
 
-        modelBuilder.Entity<UserProfile>(builder =>
+        modelBuilder.Entity<Profile>(builder =>
         {
             builder.ToTable("profiles");
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.FirstName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.LastName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.Email).HasMaxLength(256).IsRequired();
-            builder.Property(x => x.PhoneNumber).HasMaxLength(64).IsRequired();
+            builder.OwnsOne(x => x.FirstName, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("FirstName").HasMaxLength(128).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.LastName, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("LastName").HasMaxLength(128).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.Email, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("Email").HasMaxLength(256).IsRequired();
+            });
+
+            builder.OwnsOne(x => x.PhoneNumber, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("PhoneNumber").HasMaxLength(64).IsRequired();
+            });
         });
     }
 }

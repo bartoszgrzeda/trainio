@@ -7,28 +7,26 @@ Entity: Customer
 NamespaceRoot: Trainio
 Properties:
   - Name: FirstName
-    Type: string
+    Type: FirstName
     Required: true
-    ValueObject: false
+    ValueObject: true
     Editable: true
   - Name: LastName
-    Type: string
+    Type: LastName
     Required: true
-    ValueObject: false
+    ValueObject: true
     Editable: true
   - Name: Email
-    Type: EmailAddress
+    Type: Email
     Required: true
     ValueObject: true
     ValueObjectFactory: From
-    SourceType: string
     Editable: true
   - Name: PhoneNumber
     Type: PhoneNumber
     Required: false
     ValueObject: true
     ValueObjectFactory: From
-    SourceType: string
     Editable: true
   - Name: IsActive
     Type: bool
@@ -46,9 +44,9 @@ Collections: []
 ## Defaults
 
 - If `ValueObjectFactory` is omitted, use `From`.
-- If `SourceType` is omitted for VO:
-  - use `string` for `Email`, `Phone`, `Code`, `Number`
-  - otherwise accept VO type directly and validate non-null.
+- Business fields default to `ValueObject: true`.
+- Keep non-VO primitive fields only for identity/technical/status fields according to repository conventions.
+- Keep repository method parameter conventions unchanged (often primitives) unless the user explicitly asks to change them.
 - If `Behaviors` is empty, generate one aggregate method:
   - `UpdateDetails(...)` for editable non-status fields.
 
@@ -57,9 +55,9 @@ Collections: []
 ```csharp
 public sealed class Customer : BaseEntity
 {
-    public string FirstName { get; private set; } = null!;
-    public string LastName { get; private set; } = null!;
-    public EmailAddress Email { get; private set; } = null!;
+    public FirstName FirstName { get; private set; } = null!;
+    public LastName LastName { get; private set; } = null!;
+    public Email Email { get; private set; } = null!;
     public PhoneNumber? PhoneNumber { get; private set; }
     public bool IsActive { get; private set; }
 
@@ -69,44 +67,39 @@ public sealed class Customer : BaseEntity
 
     private Customer(
         Guid id,
-        string firstName,
-        string lastName,
-        EmailAddress email,
+        FirstName firstName,
+        LastName lastName,
+        Email email,
         PhoneNumber? phoneNumber,
         bool isActive) : base(id)
     {
-        FirstName = firstName;
-        LastName = lastName;
-        Email = email;
+        FirstName = Require(firstName, nameof(firstName));
+        LastName = Require(lastName, nameof(lastName));
+        Email = Require(email, nameof(email));
         PhoneNumber = phoneNumber;
         IsActive = isActive;
     }
 
     public static Customer From(
         Guid id,
-        string firstName,
-        string lastName,
-        string email,
-        string? phoneNumber)
+        FirstName firstName,
+        LastName lastName,
+        Email email,
+        PhoneNumber? phoneNumber)
     {
-        var validFirstName = RequireNonEmpty(firstName, nameof(firstName));
-        var validLastName = RequireNonEmpty(lastName, nameof(lastName));
-        var emailAddress = EmailAddress.From(email);
-        var parsedPhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : PhoneNumber.From(phoneNumber);
-
-        return new Customer(id, validFirstName, validLastName, emailAddress, parsedPhoneNumber, true);
+        return new Customer(id, firstName, lastName, email, phoneNumber, true);
     }
 
-    public void Rename(string firstName, string lastName)
+    public void Rename(FirstName firstName, LastName lastName)
     {
-        FirstName = RequireNonEmpty(firstName, nameof(firstName));
-        LastName = RequireNonEmpty(lastName, nameof(lastName));
+        FirstName = Require(firstName, nameof(firstName));
+        LastName = Require(lastName, nameof(lastName));
     }
 
-    public void ChangeContactDetails(string email, string? phoneNumber)
+    public void ChangeContactDetails(Email email, PhoneNumber? phoneNumber)
     {
-        Email = EmailAddress.From(email);
-        PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : PhoneNumber.From(phoneNumber);
+        Email = Require(email, nameof(email));
+        PhoneNumber = phoneNumber;
     }
 
     public void Activate()
@@ -119,8 +112,8 @@ public sealed class Customer : BaseEntity
         IsActive = false;
     }
 
-    private static string RequireNonEmpty(string value, string paramName) =>
-        string.IsNullOrWhiteSpace(value) ? throw new ArgumentException("Value is required.", paramName) : value.Trim();
+    private static T Require<T>(T? value, string paramName) where T : class =>
+        value is null ? throw new DomainException($"{paramName} is required.") : value;
 }
 ```
 
@@ -133,11 +126,19 @@ public sealed class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     {
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.FirstName)
-            .IsRequired();
+        builder.OwnsOne(x => x.FirstName, owned =>
+        {
+            owned.Property(x => x.Value)
+                .HasColumnName(nameof(Customer.FirstName))
+                .IsRequired();
+        });
 
-        builder.Property(x => x.LastName)
-            .IsRequired();
+        builder.OwnsOne(x => x.LastName, owned =>
+        {
+            owned.Property(x => x.Value)
+                .HasColumnName(nameof(Customer.LastName))
+                .IsRequired();
+        });
 
         builder.OwnsOne(x => x.Email, owned =>
         {
@@ -166,17 +167,40 @@ public sealed class CustomerTests
     [Fact]
     public void From_ShouldCreateCustomer_WhenInputIsValid()
     {
-        var customer = Customer.From(Guid.NewGuid(), "Jane", "Doe", "jane@site.com", "+48123456789");
+        var customer = Customer.From(
+            Guid.NewGuid(),
+            FirstName.From("Jane"),
+            LastName.From("Doe"),
+            Email.From("jane@site.com"),
+            PhoneNumber.From("+48123456789"));
 
-        customer.FirstName.Should().Be("Jane");
-        customer.Email.Value.Should().Be("jane@site.com");
+        customer.FirstName.Should().Be(FirstName.From("Jane"));
+        customer.Email.Should().Be(Email.From("jane@site.com"));
         customer.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void From_ShouldThrow_WhenRequiredValueObjectIsNull()
+    {
+        Action act = () => Customer.From(
+            Guid.NewGuid(),
+            null!,
+            LastName.From("Doe"),
+            Email.From("jane@site.com"),
+            PhoneNumber.From("+48123456789"));
+
+        act.Should().Throw<DomainException>();
     }
 
     [Fact]
     public void JsonRoundTrip_ShouldPreserveCustomerState()
     {
-        var customer = Customer.From(Guid.NewGuid(), "Jane", "Doe", "jane@site.com", "+48123456789");
+        var customer = Customer.From(
+            Guid.NewGuid(),
+            FirstName.From("Jane"),
+            LastName.From("Doe"),
+            Email.From("jane@site.com"),
+            PhoneNumber.From("+48123456789"));
 
         var json = JsonSerializer.Serialize(customer);
         var restored = JsonSerializer.Deserialize<Customer>(json);

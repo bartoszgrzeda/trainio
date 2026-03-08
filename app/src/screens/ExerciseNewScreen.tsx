@@ -151,7 +151,7 @@ async function fetchCustomExerciseNames(): Promise<Set<string>> {
     includeSeeded: 'true',
   });
 
-  const response = await fetch(`${API_BASE_URL}/exercises/list?${params.toString()}`);
+  const response = await fetch(`${API_BASE_URL}/api/exercises/list?${params.toString()}`);
   if (!response.ok) {
     throw createApiError(response.status, LOAD_FORM_ERROR_MESSAGE);
   }
@@ -166,7 +166,7 @@ async function fetchCustomExerciseNames(): Promise<Set<string>> {
 }
 
 async function createExercise(name: string): Promise<NewExerciseResponse> {
-  const response = await fetch(`${API_BASE_URL}/exercises/create`, {
+  const response = await fetch(`${API_BASE_URL}/api/exercises/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -479,11 +479,17 @@ export function ExerciseNewScreen({
     [insets.bottom],
   );
 
-  const isOfflineIndicatorVisible =
-    screenState === 'offline' || bannerState?.tone === 'offline';
+  const isLoadFormConnectionWarning =
+    screenState === 'error' && bannerState?.message === LOAD_FORM_ERROR_MESSAGE;
+  const isConnectionIndicatorVisible =
+    screenState === 'offline' ||
+    bannerState?.tone === 'offline' ||
+    isLoadFormConnectionWarning;
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    Alert.alert(
+      isLoadFormConnectionWarning ? LOAD_FORM_ERROR_MESSAGE : OFFLINE_MESSAGE,
+    );
+  }, [isLoadFormConnectionWarning]);
 
   const displayedNameError =
     fieldErrors.name ??
@@ -499,7 +505,7 @@ export function ExerciseNewScreen({
             onPress: handleBackAction,
           }}
           statusIndicator={
-            isOfflineIndicatorVisible
+            isConnectionIndicatorVisible
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,
@@ -516,7 +522,9 @@ export function ExerciseNewScreen({
               { paddingBottom: contentBottomPadding },
             ]}
             keyboardShouldPersistTaps="handled">
-            {bannerState && bannerState.tone !== 'offline' ? (
+            {bannerState &&
+            bannerState.tone !== 'offline' &&
+            !isLoadFormConnectionWarning ? (
               <View style={styles.bannerBlock}>
                 <StatusBanner tone={bannerState.tone} message={bannerState.message} />
               </View>

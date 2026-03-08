@@ -3,56 +3,92 @@ name: view-api-doc-generator
 description: Generate or refresh unified API documentation in `docs/api.md` from `**/*.view.md` files. Use when API endpoints must be extracted from view specs, merged by `METHOD + path`, enriched with view usage metadata and inferred payload/parameter examples, then regenerated idempotently with safe generated-section markers.
 ---
 
-# View API Doc Generator
+# Purpose
 
-## Workflow
+Generate and maintain `docs/api.md` from view specs by extracting endpoint contracts, merging duplicates deterministically, and preserving manual notes safely.
 
-1. Run `python3 .agents/skills/view-api-doc-generator/scripts/generate_api_docs.py` from the repository root.
-2. Review generated endpoint sections in `docs/api.md`, especially `### Notes` assumptions.
-3. If assumptions are too broad, improve the source `.view.md` files (`API`, `Data Model`, `Actions`, `Rules`, `States`) and rerun.
+# When to Use
 
-## What This Skill Does
+- Building initial API documentation from `*.view.md` files.
+- Refreshing `docs/api.md` after view spec changes.
+- Consolidating endpoint definitions across multiple screens.
+- Producing deterministic, idempotent API docs with generated-section markers.
 
-- Scan `**/*.view.md` files in the repository (excluding hidden/tooling directories like `.agents`).
-- Parse frontmatter metadata (`id`, `name`, `route`, `title`) to identify which views use each endpoint.
-- Parse endpoint rows from the `## API` table.
-- Parse JSON examples from `## Data Model` and use them to infer request/response structures.
-- Extract path/query parameters from endpoint templates.
-- Infer parameter types and examples with deterministic rules.
-- Merge duplicate endpoint definitions by `HTTP method + endpoint path`.
-- Sort output deterministically by path, then method.
-- Generate one unified API reference in `docs/api.md`.
+Example prompts:
+- "Generate `docs/api.md` from all view specs."
+- "Refresh API docs after updating `docs/views/client.view.md`."
+- "Rebuild endpoint docs and keep existing manual notes where possible."
 
-## Generated Section Contract
+# Workflow
 
-The script updates only a generated block marked by:
+1. Run the API doc generator script from repository root.
+2. Review generated endpoint content and assumptions.
+3. Refine source view specs when assumptions are too broad.
+4. Rerun generator until output is accurate and stable.
+
+## Command
+
+Run:
+
+```bash
+python3 .agents/skills/view-api-doc-generator/scripts/generate_api_docs.py
+```
+
+Optional flags:
+
+- `--repo-root <path>`
+- `--views-glob <glob>`
+- `--output <path>`
+
+## Generation Behavior
+
+The generator:
+
+- scans `**/*.view.md` (excluding tooling/hidden dirs)
+- parses frontmatter metadata (`id`, `name`, `route`, `title`)
+- extracts endpoint rows from `## API`
+- infers request/response examples from explicit JSON and data model blocks
+- merges duplicates by `METHOD + path`
+- sorts deterministically by path, then method
+- updates only the generated section in `docs/api.md`
+
+Generated markers:
 
 - `<!-- GENERATED SECTION -->`
 - `<!-- GENERATED SECTION START -->`
 - `<!-- GENERATED SECTION END -->`
 
-Behavior:
+# Checklist
 
-- If `docs/api.md` does not exist, create it with header + generated block.
-- If `docs/api.md` exists and markers are present, replace only the generated block.
-- If the file exists without markers, append a generated block without deleting existing content.
-- Parse existing endpoint `### Notes` and keep them for matching endpoints during refresh.
+- Script executed from repository root.
+- Endpoint extraction covered all relevant `*.view.md` inputs.
+- Duplicate endpoints were merged by `METHOD + path`.
+- Existing manual notes were preserved for matching endpoints.
+- Inference assumptions are documented when data is uncertain.
+- Output is deterministic and idempotent across reruns.
 
-## Inference Rules
+# Output Format
 
-- Prefer explicit JSON in API table `request`/`response` cells.
-- Expand shorthand objects (for example `{ trainingId, status: "started" }`) to valid JSON.
-- Use `Data Model` examples first for payload fields and parameter examples.
-- If data is missing, infer types/examples from naming conventions:
-  - `id` / `*Id` -> `string`
-  - `date` -> `string (date)`
-  - `time` -> `string`
-  - `status` -> `string`
-  - `count` / `total` -> `number`
-- When inference is uncertain, document assumptions in `### Notes`.
+Return:
 
-## Command Options
+1. Target file path (`docs/api.md`).
+2. Summary of generated/updated endpoint coverage.
+3. Notable assumptions that require source spec refinement.
+4. Re-run guidance when source view specs need clarification.
 
-- `--repo-root <path>`: repository root (default: `.`)
-- `--views-glob <glob>`: view discovery pattern (default: `**/*.view.md`)
-- `--output <path>`: target API doc path relative to repo root (default: `docs/api.md`)
+# Rules
+
+- Prefer explicit API/data model JSON over inferred structures.
+- Keep generated output deterministic; avoid manual ad hoc edits in generated block.
+- Do not delete non-generated content in `docs/api.md`.
+- Do not change source view specs unless explicitly requested.
+- Document inference uncertainty in endpoint notes.
+
+# Examples
+
+- First-time docs generation -> create `docs/api.md` with header + generated block.
+- Existing docs refresh -> replace only generated block and preserve surrounding manual sections.
+
+# References
+
+- [scripts/generate_api_docs.py](scripts/generate_api_docs.py)

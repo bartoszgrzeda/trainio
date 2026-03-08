@@ -11,28 +11,24 @@ public interface IRepository<T> where T : Entity
 {
     Task<T?> GetByIdAsync(
         Guid id,
-        CancellationToken cancellationToken = default);
-
-    Task<T?> GetByQueryAsync(
-        Expression<Func<T, bool>> predicate,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<T>> GetAllAsync(
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
-    Task UpdateAsync(
+    Task<IReadOnlyList<T>> GetByQueryAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken);
+
+    Task<bool> ExistsByQueryAsync(
+        Expression<Func<T, bool>> predicate,
+        CancellationToken cancellationToken);
+
+    Task AddAsync(
         T entity,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 
-    Task DeleteAsync(
-        T entity,
-        CancellationToken cancellationToken = default);
-}
+    void Update(T entity);
 
-public interface IPagedRepository<T> where T : Entity
-{
-    Task<IReadOnlyList<T>> GetPagedAsync(
-        int page,
-        int pageSize,
-        CancellationToken cancellationToken = default);
+    void Delete(T entity);
 }

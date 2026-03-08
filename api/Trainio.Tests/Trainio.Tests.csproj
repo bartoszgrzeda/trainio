@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Trainio.Domain\Trainio.Domain.csproj" />
     <ProjectReference Include="..\Trainio.Application\Trainio.Application.csproj" />
+    <ProjectReference Include="..\Trainio.Infrastructure\Trainio.Infrastructure.csproj" />
     <ProjectReference Include="..\Trainio.Api\Trainio.Api.csproj" />
   </ItemGroup>
 

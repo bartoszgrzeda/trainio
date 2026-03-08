@@ -193,7 +193,7 @@ function hasProfileChanges(original: ProfileRecord, draft: ProfileDraft): boolea
 }
 
 async function fetchProfile(): Promise<ProfileRecord> {
-  const response = await fetch(`${API_BASE_URL}/profile/get`);
+  const response = await fetch(`${API_BASE_URL}/api/profile/get`);
 
   if (!response.ok) {
     throw createApiError(response.status, LOAD_PROFILE_ERROR_MESSAGE);
@@ -224,7 +224,7 @@ async function uploadProfilePhoto(photo: SelectedPhoto): Promise<UploadPhotoResp
 }
 
 async function saveProfile(profile: ProfileDraft): Promise<ProfileRecord> {
-  const response = await fetch(`${API_BASE_URL}/profile/update`, {
+  const response = await fetch(`${API_BASE_URL}/api/profile/update`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -645,11 +645,17 @@ export function SettingsProfileScreen({
     () => BOTTOM_MENU_HEIGHT + insets.bottom + 12,
     [insets.bottom],
   );
-  const isOfflineIndicatorVisible =
-    screenState === 'offline' || bannerState?.tone === 'offline';
+  const isLoadProfileConnectionWarning =
+    screenState === 'error' && bannerState?.message === LOAD_PROFILE_ERROR_MESSAGE;
+  const isConnectionIndicatorVisible =
+    screenState === 'offline' ||
+    bannerState?.tone === 'offline' ||
+    isLoadProfileConnectionWarning;
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    Alert.alert(
+      isLoadProfileConnectionWarning ? LOAD_PROFILE_ERROR_MESSAGE : OFFLINE_MESSAGE,
+    );
+  }, [isLoadProfileConnectionWarning]);
 
   const displayedPhotoUri = pendingPhotoUri ?? draft?.photoUrl ?? null;
   const initials = getInitials(draft?.firstName ?? '', draft?.lastName ?? '');
@@ -674,7 +680,7 @@ export function SettingsProfileScreen({
             onPress: handleBackAction,
           }}
           statusIndicator={
-            isOfflineIndicatorVisible
+            isConnectionIndicatorVisible
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,
@@ -693,7 +699,9 @@ export function SettingsProfileScreen({
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
             }>
-            {bannerState && screenState !== 'offline' ? (
+            {bannerState &&
+            screenState !== 'offline' &&
+            !isLoadProfileConnectionWarning ? (
               <StatusBanner tone={bannerState.tone} message={bannerState.message} />
             ) : null}
 
@@ -770,7 +778,9 @@ export function SettingsProfileScreen({
                       <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
                     ) : null}
                   </View>
+                </View>
 
+                <View style={styles.section}>
                   <View style={styles.fieldGroup}>
                     <Text style={styles.fieldLabel}>Email</Text>
                     <TextInput
@@ -800,9 +810,6 @@ export function SettingsProfileScreen({
                       style={styles.input}
                       value={draft?.phoneNumber ?? ''}
                     />
-                    <Text style={styles.fieldHintText}>
-                      Include only digits, spaces, +, -, (, )
-                    </Text>
                     {fieldErrors.phoneNumber ? (
                       <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
                     ) : null}
@@ -956,10 +963,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
-  },
-  fieldHintText: {
-    fontSize: 12,
-    color: '#64748B',
   },
   fieldErrorText: {
     fontSize: 13,

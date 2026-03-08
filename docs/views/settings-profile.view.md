@@ -42,28 +42,38 @@ Authenticated trainer updating account identity and contact information.
   - If upload fails, keep previous saved photo and show inline error.
 - Empty State: Show avatar placeholder with initials when no photo exists.
 
-### 2. Personal Information
+### 2. Name
 
-- Purpose: Edit name and contact data in a single section.
-- Fields/Data Shown: `firstName`, `lastName`, `email`, `phoneNumber`.
+- Purpose: Edit profile name data in one section.
+- Fields/Data Shown: `firstName`, `lastName`.
 - Components:
   - Grouped input card without section header label.
   - Single-line text input labeled `First Name`.
   - Single-line text input labeled `Last Name`.
-  - Email keyboard input labeled `Email`.
-  - Phone keyboard input labeled `Phone Number`.
 - Behavior:
-  - All four fields are controlled inputs that update local draft values.
-  - Email validates format on blur and on save.
-  - Phone number can display a format hint while typing.
+  - Both fields are controlled inputs that update local draft values.
 - Rules:
   - `firstName`: required, trim leading/trailing whitespace on save.
   - `lastName`: required, trim leading/trailing whitespace on save.
-  - `email`: required, valid email format, normalized to lowercase on save.
-  - `phoneNumber`: optional; if provided, must match allowed phone format.
 - Empty State:
   - `firstName`: placeholder `Enter first name`.
   - `lastName`: placeholder `Enter last name`.
+
+### 3. Contact
+
+- Purpose: Edit contact data in a separate section.
+- Fields/Data Shown: `email`, `phoneNumber`.
+- Components:
+  - Grouped input card without section header label.
+  - Email keyboard input labeled `Email`.
+  - Phone keyboard input labeled `Phone Number`.
+- Behavior:
+  - Both fields are controlled inputs that update local draft values.
+  - Email validates format on blur and on save.
+- Rules:
+  - `email`: required, valid email format, normalized to lowercase on save.
+  - `phoneNumber`: optional; if provided, must match allowed phone format.
+- Empty State:
   - `email`: placeholder `Enter email`.
   - `phoneNumber`: placeholder `Enter phone number`.
 

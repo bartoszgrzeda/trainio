@@ -79,7 +79,7 @@ function sortClientsByFullName(clients: ClientListItem[]): ClientListItem[] {
 
 async function fetchClients(query: string): Promise<ClientListItem[]> {
   const response = await fetch(
-    `${API_BASE_URL}/clients/list?query=${encodeURIComponent(query)}`,
+    `${API_BASE_URL}/api/clients/list?query=${encodeURIComponent(query)}`,
   );
 
   if (!response.ok) {
@@ -117,6 +117,7 @@ export function ClientListScreen({
   const [searchQuery, setSearchQuery] = useState(lastSearchQuery);
   const [screenState, setScreenState] = useState<ClientListViewState>('loading');
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
+  const [loadWarningDetails, setLoadWarningDetails] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const navigateToRoute = useCallback(
@@ -147,13 +148,16 @@ export function ClientListScreen({
       cacheRef.current = loadedClients;
       setClients(loadedClients);
       setScreenState(resolveScreenState(loadedClients));
+      setLoadWarningDetails(null);
     } catch (error) {
       if (isOfflineError(error)) {
         setScreenState('offline');
-        setBannerMessage(OFFLINE_MESSAGE);
+        setBannerMessage(null);
+        setLoadWarningDetails(null);
       } else {
         setScreenState(cacheRef.current ? resolveScreenState(cacheRef.current) : 'error');
-        setBannerMessage(LOAD_ERROR_MESSAGE);
+        setBannerMessage(null);
+        setLoadWarningDetails(LOAD_ERROR_MESSAGE);
       }
 
       if (cacheRef.current) {
@@ -194,7 +198,7 @@ export function ClientListScreen({
 
   const handleClientPress = useCallback(
     (clientId: string) => {
-      navigateToRoute(`/clients/${clientId}`);
+      navigateToRoute(`/clients/${encodeURIComponent(clientId)}`);
     },
     [navigateToRoute],
   );
@@ -204,8 +208,13 @@ export function ClientListScreen({
   }, []);
 
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    const statusMessage =
+      screenState === 'offline'
+        ? OFFLINE_MESSAGE
+        : loadWarningDetails ?? OFFLINE_MESSAGE;
+
+    Alert.alert(statusMessage);
+  }, [loadWarningDetails, screenState]);
 
   const normalizedSearchQuery = useMemo(
     () => normalizeForSearch(searchQuery),
@@ -238,7 +247,7 @@ export function ClientListScreen({
         <GlobalHeader
           title="Clients"
           statusIndicator={
-            screenState === 'offline'
+            screenState === 'offline' || loadWarningDetails
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,

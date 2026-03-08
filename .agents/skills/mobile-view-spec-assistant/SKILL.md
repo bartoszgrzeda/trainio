@@ -3,212 +3,119 @@ name: mobile-view-spec-assistant
 description: Create mobile app view specifications in Markdown (`.view.md`) from rough product ideas and generate app-level shared-spec files when requirements are global. Use for screen design docs, developer handoff specs, state/action/API/data modeling, and separating per-screen content from app-shell/navigation/layout rules.
 ---
 
-# Mobile View Spec Assistant
+# Purpose
 
-## Workflow
+Turn rough mobile product ideas into implementation-ready Markdown specifications while keeping a strict boundary between screen-level specs and app-level shell rules.
 
-1. Determine the operating mode from the request.
-   - Infer the mode from user intent and expected output using `## Modes`.
-   - If intent is unclear:
-     - Use `single-view spec mode` for one screen.
-     - Use `app-level spec mode` for shared/global patterns.
-2. Ask for screen purpose when ambiguity is high; otherwise infer it and keep assumptions explicit.
-3. Keep scope strict.
-   - Include only screen-specific UI and behavior in `.view.md`.
-   - Exclude app-level shell concerns unless the screen has exceptional behavior tied to them.
-   - If requirements span multiple screens in one feature, recommend a separate feature-level spec (`<feature>.md`) that links to each `.view.md`.
-4. Produce concise, implementation-ready Markdown in English unless the user asks for another language.
+# When to Use
+
+- Creating a new screen spec (`*.view.md`) from a rough feature idea.
+- Refining an existing screen spec for developer handoff.
+- Designing sections before full screen specification.
+- Producing app-level shared rules in `docs/app-shell.md`.
+- Auditing a view spec for completeness gaps.
+
+Example prompts:
+- "Create a home screen spec for a trainer mobile app."
+- "Refine `docs/views/clients-list.view.md` and fill missing states and edge cases."
+- "Generate `docs/app-shell.md` with global navigation and shared layout rules."
+- "Audit this `.view.md` and tell me what is missing."
+
+# Workflow
+
+1. Detect mode from the request.
+2. Gather missing context with minimal assumptions.
+3. Apply the mode-specific template and constraints.
+4. Keep app-level vs feature-level vs single-screen boundaries explicit.
+5. Return concise, implementation-ready Markdown.
 
 ## Modes
 
-### View Spec Mode
+### Single-View Spec Mode
 
-Purpose:
-Generate a complete `.view.md` mobile screen specification.
+Generate exactly one `*.view.md` using [references/view-template.view.md](references/view-template.view.md).
 
-Behavior:
-- Use a rough description of a screen as input.
-- Produce a structured Markdown spec using this template:
+Requirements:
 
-```md
----
-id: <screen-id>
-name: <ScreenName>
-route: </route>
-auth: true
-layout: mobile
-title: <Title>
-description: <Short description>
----
-
-# <Screen Title>
-
-## Purpose
-
-## User
-
-## Main Goals
-
-## Sections
-
-## Actions
-
-## Data Model
-
-## API
-
-## States
-
-## Validation
-
-## Edge Cases
-
-## Navigation
-
-## Notes
-```
-
-- Keep output mobile-first.
-- Keep output concise but implementation-ready.
-- Do not include global UI elements like bottom navigation unless unique to that screen.
-- If a requirement belongs to global layout, suggest placing it in `docs/app-shell.md`.
+- Frontmatter: `id`, `name`, `route`, `auth`, `layout`, `title`, `description`.
+- Include sections for purpose, goals, sections, actions, data model, API, states, edge cases, navigation, notes.
+- Include `Validation` only when inputs/forms exist.
+- Include `States` with at least `default`, `loading`, `empty`, `error` and add others only when relevant.
 
 ### Sections Design Mode
 
-Purpose:
-Design UI sections before generating the full screen spec.
+Return recommended sections before full spec generation, including:
 
-Behavior:
-- Use a rough description of a screen as input.
-- Return a list of recommended sections.
-- For each section include:
-  - Section name
-  - Purpose
-  - Suggested components
-  - Suggested data fields
+- section name
+- purpose
+- suggested components
+- suggested data fields
 
 ### Spec Refinement Mode
 
-Purpose:
-Improve an existing `.view.md` specification.
+Update an existing `.view.md` while preserving structure and improving:
 
-Behavior:
-- Preserve structure.
-- Improve clarity.
-- Add missing states.
-- Add missing edge cases.
-- Improve actions or navigation.
+- clarity
+- missing states
+- missing edge cases
+- action/navigation precision
 
-### App Architecture Mode
+### App-Level Spec Mode
 
-Purpose:
-Generate an application-level architecture spec.
+Generate `docs/app-shell.md` using [references/app-level-template.md](references/app-level-template.md).
 
-Behavior:
-- Output file: `docs/app-shell.md`.
-- Use this structure:
-  - `# App Shell`
-  - `## App Purpose`
-  - `## Global Navigation`
-  - `## Shared Layout Rules`
-  - `## Shared Components`
-  - `## Global UI States`
-  - `## Permissions / Roles`
-  - `## Naming Conventions`
-- Screen specs must not duplicate these global rules.
+Cover:
+
+- app purpose
+- global navigation
+- shared layout rules/components
+- global states
+- permissions/roles
+- naming conventions
 
 ### Spec Audit Mode
 
-Purpose:
-Review a `.view.md` file and evaluate completeness.
+Assess presence/quality of core sections and return:
 
-Behavior:
-- Check for:
-  - `Purpose`
-  - `Sections`
-  - `Actions`
-  - `Data Model`
-  - `API`
-  - `States`
-  - `Edge Cases`
-  - `Navigation`
-- Use this output format:
+- concise pass/warn audit summary
+- concrete improvements
 
-```md
-View Spec Audit
+# Checklist
 
-✔ sections present
-✔ states defined
-⚠ missing edge cases
-⚠ navigation unclear
-```
+- Selected mode matches user intent.
+- Output stays within requested scope (screen-level vs app-level).
+- Template section order is preserved.
+- Actions, states, API, and data model are consistent.
+- Assumptions are clearly labeled when context is missing.
+- Global shell rules are not duplicated in per-view specs unless explicitly exceptional.
 
-- Then provide concrete improvement suggestions.
+# Output Format
 
-## Single-View Spec Mode
+Return one of:
 
-Generate exactly one `.view.md` spec for one described screen.
-Use the structure from [references/view-template.view.md](references/view-template.view.md).
+1. Full `*.view.md` spec (single-screen mode).
+2. Section design list (sections mode).
+3. Revised `*.view.md` content (refinement mode).
+4. Full `docs/app-shell.md` (app-level mode).
+5. Audit summary + concrete fix list (audit mode).
 
-### Content Requirements
+Keep output concise and implementation-ready.
 
-- Frontmatter must include: `id`, `name`, `route`, `auth`, `layout`, `title`, `description`.
-- Keep app shell and global navigation out of per-view specs unless directly exceptional for that screen.
-- Include `Validation` only when the screen has forms or editable inputs.
-- Include per-section empty states only when needed.
-- Include `States` with at least `default`, `loading`, `empty`, `error`.
-- Add optional `success`, `disabled`, `offline` states when relevant.
-- Keep `Navigation` section screen-specific only.
-- Suggest moving reusable patterns to `docs/app-shell.md` or `app.md`.
+# Rules
 
-### Quality Targets
+- Keep per-screen specs focused on that screen only.
+- Move shared app-shell concerns to `docs/app-shell.md`.
+- Prefer best-effort inference over blocking questions.
+- If one screen is requested, output exactly one screen spec.
+- Preserve stable section naming and ordering.
+- Do not invent unrelated features.
 
-- Clarity: describe intent, fields, and behavior concretely.
-- Consistency: keep section order and naming stable.
-- Developer handoff: include actionable data models, actions, APIs, rules, and states.
-- Mobile-first: favor touch-first interaction and compact-screen considerations.
+# Examples
 
-## App-Level Spec Mode
+- Rough screen idea -> produce one complete `.view.md` spec using repository template.
+- Mixed global + screen requirements -> keep screen spec focused and recommend extracting shared rules to `docs/app-shell.md`.
 
-Use [references/app-level-template.md](references/app-level-template.md) when the request is about shared architecture or reusable UI behavior.
-Include these sections:
-- `App Purpose`
-- `App Shell`
-- `Global Navigation`
-- `Shared Layout Rules`
-- `Shared Components`
-- `Global UI States`
-- `Permissions / Roles`
-- `Naming Conventions`
+# References
 
-Use this mode for bottom navigation rules, shared header behavior, spacing systems, tab bars, permission matrices, and global mobile shell logic.
-
-## Collaboration Behavior
-
-- Refine rough input into polished spec output.
-- Propose missing actions, states, edge cases, validation rules, and APIs.
-- Label assumptions clearly when details are missing.
-- If the request mixes local and global details, keep the view file focused and recommend extracting shared concerns into an app-level spec.
-- Keep a three-level separation:
-  - app-level spec (`docs/app-shell.md` or `app.md`) for global rules
-  - feature-level spec (`<feature>.md`) for multi-screen feature flows
-  - single-view spec (`*.view.md`) for one screen
-- If one screen is described, return one screen spec.
-
-## Output Checklist
-
-- Match the requested mode (`View Spec Mode`, `Sections Design Mode`, `Spec Refinement Mode`, `App Architecture Mode`, `Spec Audit Mode`, `single-view`, or `app-level`).
-- Preserve template section order.
-- Keep wording concise and implementation-ready.
-- Do not duplicate global shell rules inside each screen.
-- Keep screen actions, states, APIs, and data model consistent with stated goals.
-
-## Typical Workflow
-
-```text
-create home screen spec for trainer mobile app
-design sections for training details screen
-refine docs/views/home.view.md
-audit docs/views/home.view.md
-generate app-shell spec for trainer mobile app
-```
+- [references/view-template.view.md](references/view-template.view.md)
+- [references/app-level-template.md](references/app-level-template.md)

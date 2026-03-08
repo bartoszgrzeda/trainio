@@ -26,51 +26,34 @@ Authenticated trainer adding a client to their client base.
 
 ## Sections
 
-### 1. First Name
+### 1. Personal Data
 
-- Purpose: Capture client's first name.
-- Fields/Data Shown: `firstName`.
-- Components: Single-line text input labeled `First Name`.
+- Purpose: Capture core personal details in one grouped block.
+- Fields/Data Shown: `firstName`, `lastName`, `birthDate`, `gender`.
+- Components:
+  - Single-line text input labeled `First Name`.
+  - Single-line text input labeled `Last Name`.
+  - Read-only input/button field labeled `Birthdate` that opens native date picker calendar.
+  - Segmented control or radio group with values `Male`, `Female`.
 - Behavior:
-  - Updates local draft state on every change.
-  - Validates on blur and on submit.
+  - All fields update local draft state on change.
+  - Text/date fields validate on blur and on submit.
+  - Birthdate field opens calendar picker on tap and can be cleared before save.
+  - Gender allows single-select only.
 - Rules:
-  - Required.
-  - Trim leading/trailing whitespace on save.
-  - Maximum length `50`.
-- Empty State: Placeholder `Enter first name`.
+  - `firstName`: required, trim on save, max length `50`.
+  - `lastName`: required, trim on save, max length `50`.
+  - `birthDate`: required, valid date, cannot be in the future.
+  - `gender`: required, accepted values `male`, `female`.
+- Empty State:
+  - `firstName`: `Enter first name`.
+  - `lastName`: `Enter last name`.
+  - `birthDate`: `Select birthdate`.
+  - `gender`: helper text `Select one option`.
 
-### 2. Last Name
+### 2. Phone Number
 
-- Purpose: Capture client's last name.
-- Fields/Data Shown: `lastName`.
-- Components: Single-line text input labeled `Last Name`.
-- Behavior:
-  - Updates local draft state on every change.
-  - Validates on blur and on submit.
-- Rules:
-  - Required.
-  - Trim leading/trailing whitespace on save.
-  - Maximum length `50`.
-- Empty State: Placeholder `Enter last name`.
-
-### 3. Birthdate
-
-- Purpose: Capture client's birth date using calendar interaction.
-- Fields/Data Shown: `birthDate`.
-- Components: Read-only input/button field labeled `Birthdate` that opens native date picker calendar.
-- Behavior:
-  - Tapping field opens calendar picker.
-  - Selected date is shown in localized short date format.
-  - Date can be cleared before save.
-- Rules:
-  - Required.
-  - Cannot be in the future.
-- Empty State: Placeholder `Select birthdate`.
-
-### 4. Phone Number
-
-- Purpose: Capture client's primary phone contact.
+- Purpose: Capture client's primary phone contact in a dedicated section.
 - Fields/Data Shown: `phoneNumber`.
 - Components: Phone keyboard text input labeled `Phone Number`.
 - Behavior:
@@ -82,22 +65,9 @@ Authenticated trainer adding a client to their client base.
   - Length after trim: `7-20`.
 - Empty State: Placeholder `Enter phone number`.
 
-### 5. Sex/Gender
+### 3. Notes
 
-- Purpose: Capture client sex/gender from fixed options.
-- Fields/Data Shown: `gender`.
-- Components: Segmented control or radio group with values `Male`, `Female`.
-- Behavior:
-  - Single-select only.
-  - Selection updates local draft immediately.
-- Rules:
-  - Required.
-  - Accepted values: `male`, `female`.
-- Empty State: Show helper text `Select one option`.
-
-### 6. Notes
-
-- Purpose: Store optional free-text notes about the client.
+- Purpose: Store optional free-text notes in a dedicated section.
 - Fields/Data Shown: `notes`.
 - Components: Multiline text area labeled `Notes`.
 - Behavior:

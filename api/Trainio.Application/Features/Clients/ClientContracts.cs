@@ -8,6 +8,15 @@ public sealed record CreateClientCommand(
     string Gender,
     string Notes);
 
+public sealed record UpdateClientCommand(
+    Guid Id,
+    string FirstName,
+    string LastName,
+    DateOnly BirthDate,
+    string PhoneNumber,
+    string Gender,
+    string Notes);
+
 public sealed record ClientDto(
     Guid Id,
     string FirstName,

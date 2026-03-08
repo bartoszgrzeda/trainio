@@ -3,13 +3,15 @@ import { Alert, StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClientListScreen } from './src/screens/ClientListScreen';
 import { ClientNewScreen } from './src/screens/ClientNewScreen';
+import { ClientScreen } from './src/screens/ClientScreen';
+import { ExerciseScreen } from './src/screens/ExerciseScreen';
 import { ExerciseNewScreen } from './src/screens/ExerciseNewScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SettingsExercisesScreen } from './src/screens/SettingsExercisesScreen';
 import { SettingsProfileScreen } from './src/screens/SettingsProfileScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 
-type AppRoute =
+type StaticAppRoute =
   | '/home'
   | '/clients'
   | '/clients/new'
@@ -17,6 +19,41 @@ type AppRoute =
   | '/settings/profile'
   | '/settings/exercises'
   | '/settings/exercises/new';
+
+type ExerciseDetailsRoute = `/settings/exercises/${string}`;
+type ClientDetailsRoute = `/clients/${string}`;
+
+type AppRoute = StaticAppRoute | ExerciseDetailsRoute | ClientDetailsRoute;
+
+function normalizeExerciseDetailsRoute(route: string): ExerciseDetailsRoute | null {
+  const match = route.match(/^\/settings\/exercises\/([^/]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const decodedExerciseId = decodeURIComponent(match[1] ?? '');
+  const normalizedExerciseId = decodedExerciseId.trim();
+  if (!normalizedExerciseId) {
+    return null;
+  }
+
+  return `/settings/exercises/${encodeURIComponent(normalizedExerciseId)}`;
+}
+
+function normalizeClientDetailsRoute(route: string): ClientDetailsRoute | null {
+  const match = route.match(/^\/clients\/([^/]+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const decodedClientId = decodeURIComponent(match[1] ?? '');
+  const normalizedClientId = decodedClientId.trim();
+  if (!normalizedClientId || normalizedClientId.toLowerCase() === 'new') {
+    return null;
+  }
+
+  return `/clients/${encodeURIComponent(normalizedClientId)}`;
+}
 
 function normalizeRoute(route: string): AppRoute | null {
   if (route === '/home') {
@@ -48,6 +85,16 @@ function normalizeRoute(route: string): AppRoute | null {
     route === 'exercise-new'
   ) {
     return '/settings/exercises/new';
+  }
+
+  const clientDetailsRoute = normalizeClientDetailsRoute(route);
+  if (clientDetailsRoute) {
+    return clientDetailsRoute;
+  }
+
+  const exerciseDetailsRoute = normalizeExerciseDetailsRoute(route);
+  if (exerciseDetailsRoute) {
+    return exerciseDetailsRoute;
   }
 
   return null;
@@ -114,6 +161,19 @@ function App() {
 
   const currentRoute = routeStack[routeStack.length - 1] ?? '/home';
 
+  const detailsRouteMatch = currentRoute.match(/^\/settings\/exercises\/([^/]+)$/);
+  const exerciseIdFromRoute =
+    detailsRouteMatch &&
+    currentRoute !== '/settings/exercises/new'
+      ? decodeURIComponent(detailsRouteMatch[1] ?? '')
+      : null;
+  const clientDetailsRouteMatch = currentRoute.match(/^\/clients\/([^/]+)$/);
+  const clientIdFromRoute =
+    clientDetailsRouteMatch &&
+    currentRoute !== '/clients/new'
+      ? decodeURIComponent(clientDetailsRouteMatch[1] ?? '')
+      : null;
+
   const renderCurrentScreen = () => {
     if (currentRoute === '/clients/new') {
       return <ClientNewScreen navigation={navigation} />;
@@ -121,6 +181,15 @@ function App() {
 
     if (currentRoute === '/clients') {
       return <ClientListScreen navigation={navigation} />;
+    }
+
+    if (clientIdFromRoute) {
+      return (
+        <ClientScreen
+          navigation={navigation}
+          clientId={clientIdFromRoute}
+        />
+      );
     }
 
     if (currentRoute === '/settings') {
@@ -137,6 +206,15 @@ function App() {
 
     if (currentRoute === '/settings/exercises/new') {
       return <ExerciseNewScreen navigation={navigation} />;
+    }
+
+    if (exerciseIdFromRoute) {
+      return (
+        <ExerciseScreen
+          navigation={navigation}
+          exerciseId={exerciseIdFromRoute}
+        />
+      );
     }
 
     return <HomeScreen navigation={navigation} />;

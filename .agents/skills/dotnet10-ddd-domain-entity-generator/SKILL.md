@@ -1,45 +1,47 @@
 ---
 name: dotnet10-ddd-domain-entity-generator
-description: Generate production-ready .NET 10 DDD domain entities that inherit BaseEntity, enforce invariants through factory/domain methods, and include EF Core entity configuration plus xUnit + FluentAssertions unit tests. Use when creating or refactoring domain entities in Domain/Entities with encapsulation, Value Object handling, and practical persistence mapping.
+description: Generate production-ready .NET 10 DDD domain entities that inherit BaseEntity, use value objects for business properties and entity APIs, enforce invariants through factory/domain methods, and include EF Core entity configuration plus xUnit + FluentAssertions unit tests. Use when creating or refactoring domain entities in Domain/Entities with encapsulation, Value Object handling, and practical persistence mapping.
 ---
 
-# Dotnet10 DDD Domain Entity Generator
+# Purpose
 
-## Workflow
+Generate production-ready .NET 10 DDD entities with rich behavior, Value Object-based business fields, EF Core configuration, and focused unit tests that match repository conventions.
 
-1. Parse entity input into a normalized model.
+# When to Use
+
+- Creating a new domain entity in `Domain/Entities`.
+- Refactoring an anemic entity into behavior-rich DDD style.
+- Enforcing Value Object usage for business properties and entity APIs.
+- Adding or updating EF Core mapping plus entity unit tests.
+
+Example prompts:
+- "Create a `Customer` entity with `FirstName`, `LastName`, and `Email` value objects plus EF config and tests."
+- "Refactor `Order` to use value objects in `From(...)` and domain methods."
+- "Generate a DDD `Subscription` entity with activation behavior and JSON round-trip tests."
+
+# Workflow
+
+1. Parse request input into a normalized entity model.
 2. Inspect repository conventions before writing code.
-3. Generate entity class in `Domain/Entities`.
-4. Generate EF Core configuration class in infrastructure persistence config folder.
+3. Generate domain entity code in `Domain/Entities`.
+4. Generate EF Core configuration in the repository's persistence configuration folder.
 5. Generate unit tests in `Tests/Unit/Domain/Entities`.
-6. Validate compile assumptions and return complete output.
+6. Validate assumptions and return complete output.
 
-Target runtime/language profile:
+## Input Normalization
 
-- .NET 10
-- Modern C# style with nullable reference types enabled
-- File-scoped namespaces
-
-## 1) Parse Input
-
-Accept either structured input or natural language and normalize to this shape:
+Accept structured input or natural language and normalize to:
 
 ```yaml
 Entity: Customer
 Properties:
   - Name: FirstName
-    Type: string
-    Required: true
-    ValueObject: false
-    Editable: true
-  - Name: Email
-    Type: EmailAddress
+    Type: FirstName
     Required: true
     ValueObject: true
     Editable: true
 Behaviors:
   - Rename
-  - ChangeContactDetails
 ActivationSemantics: true
 Collections:
   - Name: Orders
@@ -48,158 +50,104 @@ Collections:
 
 If details are missing, infer safe defaults:
 
-- `Editable`: true for non-key business fields.
-- `ActivationSemantics`: true when `IsActive` exists; otherwise false.
-- `Behaviors`: if empty, generate a single meaningful aggregate update method, not one method per property.
+- `Editable`: `true` for non-key business fields.
+- `ActivationSemantics`: `true` when `IsActive` exists; otherwise `false`.
+- `Behaviors`: generate one meaningful aggregate update method when behavior list is empty.
+- Business properties default to `ValueObject: true`; primitives are only for identity/technical fields unless repository conventions require otherwise.
 
-Read [references/input-and-template.md](references/input-and-template.md) only when input format is ambiguous or the user requests examples.
+## Repository Convention Scan
 
-## 2) Inspect Repository Conventions
+Before generation, detect and follow:
 
-Before generating files:
+- `BaseEntity` constructor and base-call pattern.
+- Namespace and file layout style.
+- Persistence configuration folder conventions.
+- Existing Value Object factory conventions (`From`, `Create`, `TryFrom`).
+- Unit test stack and naming style.
 
-1. Locate `BaseEntity` and match constructor/base-call style.
-2. Confirm namespace style (file-scoped expected) and naming conventions.
-3. Detect infrastructure configuration folder pattern (for example `Infrastructure/Persistence/Configurations` or equivalent).
-4. Confirm test stack (`xUnit`, `FluentAssertions`) and existing assertion style.
-5. Detect Value Object creation conventions (`From`, `Create`, `TryFrom`) and use the existing pattern.
+Prefer repository conventions over defaults.
 
-Prefer existing project conventions over defaults.
+## Entity Generation Rules
 
-Base class contract to honor:
+Generate `Domain/Entities/<EntityName>.cs` with:
 
-```csharp
-public abstract class BaseEntity
-{
-    public Guid Id { get; private set; }
-
-    protected BaseEntity(Guid id)
-    {
-        Id = id;
-    }
-
-    protected BaseEntity()
-    {
-        Id = Guid.NewGuid();
-    }
-}
-```
-
-## 3) Generate Domain Entity
-
-Create `Domain/Entities/<EntityName>.cs` with these mandatory rules:
-
-- Inherit from `BaseEntity`.
-- Use file-scoped namespace.
-- Provide `public get; private set;` properties only.
+- `BaseEntity` inheritance.
+- File-scoped namespace.
+- `public get; private set;` properties only.
 - No public constructors.
-- Include a private parameterless constructor for EF Core.
-- Include private constructor(s) used by `From(...)`.
-- Expose `public static <EntityName> From(...)`.
-- Enforce required-field and domain invariants in creation/update flows.
-- Mutate state only through meaningful domain methods.
-- Respect nullable reference types.
-- Assign primitive fields only in constructor/factory/domain methods.
-- Avoid comments unless they add real clarity.
+- Private parameterless constructor for EF Core.
+- Private constructor(s) used by `From(...)`.
+- Static `From(...)` factory with invariant enforcement.
+- Domain methods that express intent, not generic property setters.
+- Value Objects stored directly (never primitive `.Value` shadow storage).
 
-### Entity rules
+For collections:
 
-1. Keep model behavior-rich and non-anemic.
-2. Use concise guard clauses:
-   - required string: not null/whitespace
-   - numeric amount/price: non-negative
-   - required references/value objects: non-null
-3. For Value Object properties:
-   - use VO creation flow in `From(...)` and domain methods
-   - prefer `<ValueObjectType>.From(...)`; fallback to repository pattern when different
-4. For collection properties:
-   - keep mutable collection private (`List<T>`)
-   - expose read-only view (`IReadOnlyCollection<T>`)
-   - modify through intention-revealing methods only
-5. For behaviors:
-   - if explicit behaviors are provided, generate those methods
-   - if no behavior is provided, generate one sensible aggregate update method (for example `UpdateDetails(...)`)
-   - do not auto-generate one method per property
+- Keep mutable list private (`List<T>`).
+- Expose read-only view (`IReadOnlyCollection<T>`).
+- Mutate only through explicit behavior methods.
 
-### Constructor and factory pattern
+## EF Core Configuration Rules
 
-- `From(...)` accepts required creation arguments.
-- `From(...)` creates/validates Value Objects when needed.
-- `From(...)` returns a valid instance through a private constructor.
-- Keep invariant checks in shared private/internal guard logic where practical.
-- Constructor should never be public.
-
-## 4) Generate EF Core Configuration
-
-Create `<EntityName>Configuration.cs` in the repository’s standard persistence configuration folder. If no pattern exists, default to:
-
-- `Infrastructure/Persistence/Configurations/<EntityName>Configuration.cs`
-
-Rules:
+Generate `<EntityName>Configuration.cs` in the repository-standard persistence config folder.
 
 - Implement `IEntityTypeConfiguration<<EntityName>>`.
-- Configure key (`HasKey(x => x.Id)`).
-- Configure scalar properties with required/optional semantics.
-- Configure maximum lengths/precision when inferable from existing conventions.
+- Configure key and required/optional semantics.
+- Configure lengths/precision when inferable.
 - Map Value Objects with `OwnsOne(...)` when appropriate.
-- Avoid magic strings unless owned mapping requires explicit column naming.
-- Keep configuration production-ready and consistent with existing migrations strategy.
-- Keep namespaces and folder placement easy to adjust to repository conventions.
+- Keep mappings migration-friendly and convention-aligned.
 
-Value Object mapping defaults:
+## Unit Test Rules
 
-- Single-value VO: map `Value` property with explicit column name.
-- Multi-field VO: map each member inside `OwnsOne` based on provided VO members.
-- Optional VO: configure owned navigation as optional according to repository pattern.
+Generate `Tests/Unit/Domain/Entities/<EntityName>Tests.cs` using xUnit and FluentAssertions.
 
-## 5) Generate Unit Tests
-
-Create `Tests/Unit/Domain/Entities/<EntityName>Tests.cs` with:
-
-- `xUnit`
-- `FluentAssertions`
-- `System.Text.Json`
-- clear Arrange / Act / Assert separation
-
-Minimum test coverage:
+Minimum coverage:
 
 1. `From(...)` creates valid entity for valid input.
-2. `From(...)` rejects invalid required values.
+2. `From(...)` rejects missing required value objects.
 3. Domain behavior methods update state correctly.
-4. Invariants remain protected after invalid operations.
-5. Value Object creation flow is exercised during entity creation/update when applicable.
-6. JSON serialization and deserialization round-trip preserves relevant entity state.
+4. Invariants remain protected on invalid operations.
+5. Entity API and business properties use value object types.
+6. JSON serialization/deserialization round-trip preserves relevant state.
 
-Test naming style:
-
-- `<Method>_Should_<Expected>_When_<Condition>`
-
-## 6) Output Contract
-
-For each entity request, always generate:
-
-1. Entity class
-2. EF Core configuration class
-3. Unit test class
-
-Return output with:
-
-1. File paths
-2. Full compilable code per file
-3. Assumptions (only if required)
-4. Validation status (`dotnet build`/test run if executed)
-
-## Guardrail Checklist
-
-Before finalizing, verify all are true:
+# Checklist
 
 - Entity inherits `BaseEntity`.
-- No public setters.
-- Private parameterless constructor exists.
-- Static `From(...)` exists and enforces invariants.
-- Domain methods express business intent.
-- No setter-like method per property by default.
-- Value Objects are created through VO creation flow.
-- EF configuration maps required/optional fields and owned VOs.
-- Unit tests cover creation, validation failures, behaviors, invariants, and VO usage.
-- Unit tests cover JSON serialization/deserialization round-trip.
+- No public setters or public constructors.
+- Private parameterless constructor exists for EF Core.
+- `From(...)` exists and enforces invariants.
+- Business properties are Value Object types.
+- `From(...)` and domain methods accept Value Object parameters for business fields.
+- Domain methods are intention-revealing.
+- EF config maps required/optional fields and owned value objects correctly.
+- Tests cover creation, validation failures, behaviors, invariants, and JSON round-trip.
+
+# Output Format
+
+Return:
+
+1. Created/updated file paths.
+2. Full compilable code for:
+   - entity class
+   - EF Core configuration class
+   - unit test class
+3. Assumptions (only when necessary).
+4. Validation status (`dotnet build`/`dotnet test` if executed).
+
+# Rules
+
+- Preserve existing repository conventions over defaults.
+- Keep entity behavior-rich; do not generate anemic models.
+- Keep business properties and entity APIs Value Object based.
+- Do not auto-generate one method per property unless explicitly requested.
+- Do not add comments unless they materially improve clarity.
+- Do not change unrelated files.
+
+# Examples
+
+- New entity request -> generate entity + EF config + tests with repository-aligned conventions.
+- Refactor request -> preserve public contract intent while replacing primitive business fields with value objects.
+
+# References
+
+- [references/input-and-template.md](references/input-and-template.md)

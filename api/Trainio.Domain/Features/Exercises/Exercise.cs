@@ -1,44 +1,55 @@
+using System.Text.Json.Serialization;
 using Trainio.Domain.Common;
+using Trainio.Domain.ValueObjects;
 
 namespace Trainio.Domain.Features.Exercises;
 
-public sealed class Exercise
+public sealed class Exercise : BaseEntity
 {
     private Exercise()
     {
-        Name = string.Empty;
+        ExerciseName = null!;
     }
 
-    private Exercise(Guid id, string name, ExerciseSource source)
+    [JsonConstructor]
+    private Exercise(Guid id, ExerciseName exerciseName, ExerciseSource source)
+        : base(id)
     {
-        Id = id;
-        Name = name;
+        ExerciseName = Require(exerciseName, nameof(exerciseName));
         Source = source;
     }
 
-    public Guid Id { get; private set; }
-
-    public string Name { get; private set; }
+    public ExerciseName ExerciseName { get; private set; }
 
     public ExerciseSource Source { get; private set; }
 
-    public static Exercise CreateCustom(string name)
+    public static Exercise From(ExerciseName exerciseName)
     {
-        return new Exercise(Guid.NewGuid(), RequireName(name), ExerciseSource.Custom);
+        return new Exercise(Guid.NewGuid(), exerciseName, ExerciseSource.Custom);
     }
 
-    public static Exercise CreateSeeded(string name)
+    public static Exercise CreateCustom(ExerciseName exerciseName)
     {
-        return new Exercise(Guid.NewGuid(), RequireName(name), ExerciseSource.Seeded);
+        return From(exerciseName);
     }
 
-    private static string RequireName(string value)
+    public static Exercise CreateSeeded(ExerciseName exerciseName)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        return new Exercise(Guid.NewGuid(), exerciseName, ExerciseSource.Seeded);
+    }
+
+    public void Update(ExerciseName exerciseName)
+    {
+        ExerciseName = Require(exerciseName, nameof(exerciseName));
+    }
+
+    private static T Require<T>(T? value, string fieldName) where T : class
+    {
+        if (value is null)
         {
-            throw new DomainException("Exercise name is required.");
+            throw new DomainException($"{fieldName} is required.");
         }
 
-        return value.Trim();
+        return value;
     }
 }

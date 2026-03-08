@@ -15,10 +15,10 @@ public sealed class ExampleApplicationService
     private readonly IUnitOfWork _unitOfWork;
 
     public ExampleApplicationService(
-        IRepository<User> userRepository,
+        IRepositoryFactory repositoryFactory,
         IUnitOfWork unitOfWork)
     {
-        _userRepository = userRepository;
+        _userRepository = repositoryFactory.Get<User>();
         _unitOfWork = unitOfWork;
     }
 
@@ -40,7 +40,7 @@ public sealed class ExampleApplicationService
 
         user.ChangeDisplayName(newDisplayName);
 
-        await _userRepository.UpdateAsync(user, cancellationToken);
+        _userRepository.Update(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -55,16 +55,17 @@ public sealed class ExampleApplicationService
 
         var normalizedEmail = email.Trim().ToUpperInvariant();
 
-        var user = await _userRepository.GetByQueryAsync(
+        var users = await _userRepository.GetByQueryAsync(
             x => x.NormalizedEmail == normalizedEmail,
             cancellationToken);
+        var user = users.SingleOrDefault();
 
         if (user is null)
         {
             return;
         }
 
-        await _userRepository.DeleteAsync(user, cancellationToken);
+        _userRepository.Delete(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
@@ -73,11 +74,6 @@ public sealed class ExampleApplicationService
         int pageSize,
         CancellationToken cancellationToken = default)
     {
-        if (_userRepository is IPagedRepository<User> pagedRepository)
-        {
-            return await pagedRepository.GetPagedAsync(page, pageSize, cancellationToken);
-        }
-
         var all = await _userRepository.GetAllAsync(cancellationToken);
         return all
             .Skip((page - 1) * pageSize)

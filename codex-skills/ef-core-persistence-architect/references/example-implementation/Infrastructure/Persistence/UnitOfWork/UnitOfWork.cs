@@ -13,7 +13,7 @@ public sealed class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    public Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         return _dbContext.SaveChangesAsync(cancellationToken);
     }

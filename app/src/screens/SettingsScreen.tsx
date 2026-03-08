@@ -288,9 +288,13 @@ export function SettingsScreen({
   const handleSignOutPress = useCallback(() => {
     handleSignOut().catch(() => undefined);
   }, [handleSignOut]);
+  const offlineDetails =
+    bannerState?.tone === 'offline' && bannerState.message !== OFFLINE_MESSAGE
+      ? bannerState.message
+      : undefined;
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    Alert.alert(OFFLINE_MESSAGE, offlineDetails);
+  }, [offlineDetails]);
 
   const signOutBottomPadding = useMemo(
     () => BOTTOM_MENU_HEIGHT + insets.bottom + 12,

@@ -87,14 +87,20 @@ interface ApiError extends Error {
   status?: number;
 }
 
+interface ApiErrorResponse {
+  code?: string;
+  message?: string;
+}
+
 const API_BASE_URL = 'http://localhost:3000';
 const SUPPORTED_GENDERS: ClientGender[] = ['male', 'female'];
-const PHONE_ALLOWED_REGEX = /^[0-9+\-() ]+$/;
+const PHONE_ALLOWED_REGEX = /^[0-9+\-(). ]+$/;
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 const DEFAULT_ERROR_MESSAGE = 'Could not create client. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 const CONFLICT_MESSAGE = 'A similar client already exists. Review data and try again.';
+const LOAD_METADATA_ERROR_MESSAGE = 'Could not load form metadata.';
 
 const FIRST_NAME_REQUIRED_MESSAGE = 'First name is required.';
 const LAST_NAME_REQUIRED_MESSAGE = 'Last name is required.';
@@ -190,7 +196,7 @@ function resolveBirthDatePickerValue(value: string | null): Date {
 }
 
 function normalizePhoneForSubmit(phoneNumber: string): string {
-  return phoneNumber.trim().replace(/[()\- ]/g, '');
+  return phoneNumber.trim().replace(/[().\- ]/g, '');
 }
 
 function isDraftEmpty(draft: ClientFormDraft): boolean {
@@ -218,6 +224,19 @@ function createApiError(status: number, fallbackMessage: string): ApiError {
   return error;
 }
 
+async function createApiErrorFromResponse(
+  response: Response,
+  fallbackMessage: string,
+): Promise<ApiError> {
+  try {
+    const payload = (await response.json()) as ApiErrorResponse;
+    const message = payload.message?.trim() || fallbackMessage;
+    return createApiError(response.status, message);
+  } catch {
+    return createApiError(response.status, fallbackMessage);
+  }
+}
+
 function isOfflineError(error: unknown): boolean {
   if (error instanceof TypeError) {
     return true;
@@ -236,6 +255,10 @@ function validateDraft(draft: ClientFormDraft): ClientFormErrors {
   const firstName = draft.firstName.trim();
   const lastName = draft.lastName.trim();
   const phoneNumber = draft.phoneNumber.trim();
+  const phoneDigitsCount = phoneNumber.replace(/\D/g, '').length;
+  const phonePlusCount = (phoneNumber.match(/\+/g) ?? []).length;
+  const isPhonePlusPlacementInvalid =
+    phonePlusCount > 1 || (phonePlusCount === 1 && !phoneNumber.startsWith('+'));
 
   if (firstName.length < 1 || firstName.length > 50) {
     errors.firstName = FIRST_NAME_REQUIRED_MESSAGE;
@@ -250,9 +273,10 @@ function validateDraft(draft: ClientFormDraft): ClientFormErrors {
   }
 
   if (
-    phoneNumber.length < 7 ||
-    phoneNumber.length > 20 ||
-    !PHONE_ALLOWED_REGEX.test(phoneNumber)
+    phoneDigitsCount < 8 ||
+    phoneDigitsCount > 15 ||
+    !PHONE_ALLOWED_REGEX.test(phoneNumber) ||
+    isPhonePlusPlacementInvalid
   ) {
     errors.phoneNumber = PHONE_ERROR_MESSAGE;
   }
@@ -305,7 +329,7 @@ async function createClient(draft: ClientFormDraft): Promise<NewClientResponse> 
     notes: draft.notes.trim(),
   };
 
-  const response = await fetch(`${API_BASE_URL}/clients/create`, {
+  const response = await fetch(`${API_BASE_URL}/api/clients/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -314,7 +338,7 @@ async function createClient(draft: ClientFormDraft): Promise<NewClientResponse> 
   });
 
   if (!response.ok) {
-    throw createApiError(response.status, DEFAULT_ERROR_MESSAGE);
+    throw await createApiErrorFromResponse(response, DEFAULT_ERROR_MESSAGE);
   }
 
   return (await response.json()) as NewClientResponse;
@@ -430,7 +454,7 @@ export function ClientNewScreen({
           setScreenState('error');
           setBannerState({
             tone: 'error',
-            message: 'Could not load form metadata.',
+            message: LOAD_METADATA_ERROR_MESSAGE,
           });
         }
       } finally {
@@ -708,11 +732,19 @@ export function ClientNewScreen({
       12,
     [insets.bottom],
   );
-  const isOfflineIndicatorVisible =
-    screenState === 'offline' || bannerState?.tone === 'offline';
+  const isLoadMetadataConnectionWarning =
+    screenState === 'error' && bannerState?.message === LOAD_METADATA_ERROR_MESSAGE;
+  const isConnectionIndicatorVisible =
+    screenState === 'offline' ||
+    bannerState?.tone === 'offline' ||
+    isLoadMetadataConnectionWarning;
   const handleOfflineInfoPress = useCallback(() => {
-    Alert.alert(OFFLINE_MESSAGE);
-  }, []);
+    Alert.alert(
+      isLoadMetadataConnectionWarning
+        ? LOAD_METADATA_ERROR_MESSAGE
+        : OFFLINE_MESSAGE,
+    );
+  }, [isLoadMetadataConnectionWarning]);
 
   const isLoadingState = screenState === 'loading' && !didLoadMetadata;
 
@@ -726,7 +758,7 @@ export function ClientNewScreen({
             onPress: handleBackAction,
           }}
           statusIndicator={
-            isOfflineIndicatorVisible
+            isConnectionIndicatorVisible
               ? {
                   accessibilityLabel: 'No internet connection details',
                   onPress: handleOfflineInfoPress,
@@ -743,7 +775,9 @@ export function ClientNewScreen({
               { paddingBottom: contentBottomPadding },
             ]}
             keyboardShouldPersistTaps="handled">
-            {bannerState && bannerState.tone !== 'offline' ? (
+            {bannerState &&
+            bannerState.tone !== 'offline' &&
+            !isLoadMetadataConnectionWarning ? (
               <View style={styles.bannerBlock}>
                 <StatusBanner tone={bannerState.tone} message={bannerState.message} />
               </View>
@@ -754,166 +788,172 @@ export function ClientNewScreen({
                 <LoadingSkeleton rows={7} rowHeight={28} />
               </View>
             ) : (
-              <View style={styles.section}>
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>First Name</Text>
-                  <TextInput
-                    autoCapitalize="words"
-                    editable={!draft.isSaving}
-                    onBlur={() => handleFieldBlur('firstName')}
-                    onChangeText={value => handleFieldChange('firstName', value)}
-                    placeholder="Enter first name"
-                    maxLength={50}
-                    style={styles.input}
-                    value={draft.firstName}
-                  />
-                  {fieldErrors.firstName ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Last Name</Text>
-                  <TextInput
-                    autoCapitalize="words"
-                    editable={!draft.isSaving}
-                    onBlur={() => handleFieldBlur('lastName')}
-                    onChangeText={value => handleFieldChange('lastName', value)}
-                    placeholder="Enter last name"
-                    maxLength={50}
-                    style={styles.input}
-                    value={draft.lastName}
-                  />
-                  {fieldErrors.lastName ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Birthdate</Text>
-                  <View style={styles.birthdateInput}>
-                    <Pressable
-                      accessibilityRole="button"
-                      disabled={draft.isSaving}
-                      onPress={handleBirthdatePress}
-                      style={({ pressed }) => [
-                        styles.birthdateValueButton,
-                        pressed && !draft.isSaving && styles.birthdateValueButtonPressed,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.readOnlyInputText,
-                          !draft.birthDate && styles.placeholderText,
-                        ]}>
-                        {formatBirthDate(draft.birthDate)}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      accessibilityLabel="Clear birthdate"
-                      accessibilityRole="button"
-                      disabled={!draft.birthDate || draft.isSaving}
-                      onPress={handleClearBirthdate}
-                      style={({ pressed }) => [
-                        styles.birthdateClearButton,
-                        (!draft.birthDate || draft.isSaving) &&
-                          styles.birthdateClearButtonDisabled,
-                        pressed &&
-                          !draft.isSaving &&
-                          draft.birthDate &&
-                          styles.birthdateClearButtonPressed,
-                      ]}>
-                      <Text
-                        style={[
-                          styles.birthdateClearText,
-                          !draft.birthDate && styles.birthdateClearTextDisabled,
-                        ]}>
-                        X
-                      </Text>
-                    </Pressable>
+              <>
+                <View style={styles.section}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>First Name</Text>
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={!draft.isSaving}
+                      onBlur={() => handleFieldBlur('firstName')}
+                      onChangeText={value => handleFieldChange('firstName', value)}
+                      placeholder="Enter first name"
+                      maxLength={50}
+                      style={styles.input}
+                      value={draft.firstName}
+                    />
+                    {fieldErrors.firstName ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.firstName}</Text>
+                    ) : null}
                   </View>
-                  {isBirthDatePickerVisible ? (
-                    <View style={styles.birthdatePickerContainer}>
-                      <DateTimePicker
-                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                        maximumDate={maxBirthDate}
-                        mode="date"
-                        onChange={handleBirthdateChange}
-                        value={birthDatePickerValue}
-                      />
-                    </View>
-                  ) : null}
-                  {fieldErrors.birthDate ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.birthDate}</Text>
-                  ) : null}
-                </View>
 
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Phone Number</Text>
-                  <TextInput
-                    editable={!draft.isSaving}
-                    keyboardType="phone-pad"
-                    onBlur={() => handleFieldBlur('phoneNumber')}
-                    onChangeText={value => handleFieldChange('phoneNumber', value)}
-                    placeholder="Enter phone number"
-                    style={styles.input}
-                    value={draft.phoneNumber}
-                  />
-                  {fieldErrors.phoneNumber ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
-                  ) : null}
-                </View>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Last Name</Text>
+                    <TextInput
+                      autoCapitalize="words"
+                      editable={!draft.isSaving}
+                      onBlur={() => handleFieldBlur('lastName')}
+                      onChangeText={value => handleFieldChange('lastName', value)}
+                      placeholder="Enter last name"
+                      maxLength={50}
+                      style={styles.input}
+                      value={draft.lastName}
+                    />
+                    {fieldErrors.lastName ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.lastName}</Text>
+                    ) : null}
+                  </View>
 
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Gender</Text>
-                  <View style={styles.segmentedRow}>
-                    {genderOptions.map(gender => {
-                      const isSelected = draft.gender === gender;
-                      return (
-                        <Pressable
-                          key={gender}
-                          accessibilityRole="button"
-                          onPress={() => handleGenderSelect(gender)}
-                          style={({ pressed }) => [
-                            styles.segmentOption,
-                            isSelected && styles.segmentOptionSelected,
-                            pressed && !isSelected && styles.segmentOptionPressed,
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Birthdate</Text>
+                    <View style={styles.birthdateInput}>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={draft.isSaving}
+                        onPress={handleBirthdatePress}
+                        style={({ pressed }) => [
+                          styles.birthdateValueButton,
+                          pressed && !draft.isSaving && styles.birthdateValueButtonPressed,
+                        ]}>
+                        <Text
+                          style={[
+                            styles.readOnlyInputText,
+                            !draft.birthDate && styles.placeholderText,
                           ]}>
-                          <Text
-                            style={[
-                              styles.segmentText,
-                              isSelected && styles.segmentTextSelected,
-                            ]}>
-                            {mapGenderLabel(gender)}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
+                          {formatBirthDate(draft.birthDate)}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        accessibilityLabel="Clear birthdate"
+                        accessibilityRole="button"
+                        disabled={!draft.birthDate || draft.isSaving}
+                        onPress={handleClearBirthdate}
+                        style={({ pressed }) => [
+                          styles.birthdateClearButton,
+                          (!draft.birthDate || draft.isSaving) &&
+                            styles.birthdateClearButtonDisabled,
+                          pressed &&
+                            !draft.isSaving &&
+                            draft.birthDate &&
+                            styles.birthdateClearButtonPressed,
+                        ]}>
+                        <Text
+                          style={[
+                            styles.birthdateClearText,
+                            !draft.birthDate && styles.birthdateClearTextDisabled,
+                          ]}>
+                          X
+                        </Text>
+                      </Pressable>
+                    </View>
+                    {isBirthDatePickerVisible ? (
+                      <View style={styles.birthdatePickerContainer}>
+                        <DateTimePicker
+                          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                          maximumDate={maxBirthDate}
+                          mode="date"
+                          onChange={handleBirthdateChange}
+                          value={birthDatePickerValue}
+                        />
+                      </View>
+                    ) : null}
+                    {fieldErrors.birthDate ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.birthDate}</Text>
+                    ) : null}
                   </View>
-                  {fieldErrors.gender ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.gender}</Text>
-                  ) : null}
+
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Gender</Text>
+                    <View style={styles.segmentedRow}>
+                      {genderOptions.map(gender => {
+                        const isSelected = draft.gender === gender;
+                        return (
+                          <Pressable
+                            key={gender}
+                            accessibilityRole="button"
+                            onPress={() => handleGenderSelect(gender)}
+                            style={({ pressed }) => [
+                              styles.segmentOption,
+                              isSelected && styles.segmentOptionSelected,
+                              pressed && !isSelected && styles.segmentOptionPressed,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.segmentText,
+                                isSelected && styles.segmentTextSelected,
+                              ]}>
+                              {mapGenderLabel(gender)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                    {fieldErrors.gender ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.gender}</Text>
+                    ) : null}
+                  </View>
                 </View>
 
-                <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Notes</Text>
-                  <TextInput
-                    editable={!draft.isSaving}
-                    maxLength={500}
-                    multiline
-                    onBlur={() => handleFieldBlur('notes')}
-                    onChangeText={value => handleFieldChange('notes', value)}
-                    placeholder="Add notes (optional)"
-                    scrollEnabled
-                    style={styles.textArea}
-                    textAlignVertical="top"
-                    value={draft.notes}
-                  />
-                  <Text style={styles.characterCount}>{draft.notes.length}/500</Text>
-                  {fieldErrors.notes ? (
-                    <Text style={styles.fieldErrorText}>{fieldErrors.notes}</Text>
-                  ) : null}
+                <View style={styles.section}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Phone Number</Text>
+                    <TextInput
+                      editable={!draft.isSaving}
+                      keyboardType="phone-pad"
+                      onBlur={() => handleFieldBlur('phoneNumber')}
+                      onChangeText={value => handleFieldChange('phoneNumber', value)}
+                      placeholder="Enter phone number"
+                      style={styles.input}
+                      value={draft.phoneNumber}
+                    />
+                    {fieldErrors.phoneNumber ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.phoneNumber}</Text>
+                    ) : null}
+                  </View>
                 </View>
-              </View>
+
+                <View style={styles.section}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Notes</Text>
+                    <TextInput
+                      editable={!draft.isSaving}
+                      maxLength={500}
+                      multiline
+                      onBlur={() => handleFieldBlur('notes')}
+                      onChangeText={value => handleFieldChange('notes', value)}
+                      placeholder="Add notes (optional)"
+                      scrollEnabled
+                      style={styles.textArea}
+                      textAlignVertical="top"
+                      value={draft.notes}
+                    />
+                    <Text style={styles.characterCount}>{draft.notes.length}/500</Text>
+                    {fieldErrors.notes ? (
+                      <Text style={styles.fieldErrorText}>{fieldErrors.notes}</Text>
+                    ) : null}
+                  </View>
+                </View>
+              </>
             )}
           </ScrollView>
 
@@ -976,7 +1016,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     padding: 16,
-    gap: 16,
+    gap: 12,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
