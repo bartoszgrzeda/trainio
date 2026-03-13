@@ -1,0 +1,46 @@
+request:
+  flow_name: "Marketplace Checkout and Fulfillment"
+  detail_level: "auto" # one of: auto, high_level, detailed_ux
+  journey_type: "transactional" # onboarding, conversion, retention, transactional, custom
+  product_problem_statement: "Users abandon checkout when payment fails or shipping dates are uncertain."
+  actors:
+    - role: "buyer"
+      goals:
+        - "Complete purchase quickly"
+        - "Trust delivery timeline"
+    - role: "support_agent"
+      goals:
+        - "Resolve blocked orders"
+  entry_points:
+    - "Cart screen"
+    - "Reorder CTA from order history"
+  success_outcomes:
+    - "Order placed with confirmed payment and ETA"
+    - "Fallback support path available when automation fails"
+  constraints:
+    - "Guest checkout is allowed"
+    - "High-risk orders require review"
+  known_dependencies:
+    services:
+      - "Payment Gateway"
+      - "Fraud Engine"
+      - "Inventory Service"
+      - "Notification Service"
+    endpoints:
+      - "POST /api/checkout/session"
+      - "POST /api/payments/authorize"
+      - "POST /api/risk/evaluate"
+  known_edge_cases:
+    - "Saved card expired"
+    - "Inventory changes during payment"
+    - "3DS challenge timeout"
+  cross_feature_interactions:
+    - "Checkout -> Orders"
+    - "Checkout -> Support"
+  cross_role_interactions:
+    - "Buyer -> Support Agent"
+  output_audience:
+    - "product"
+    - "ux"
+    - "engineering"
+    - "stakeholders"

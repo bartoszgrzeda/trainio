@@ -1,0 +1,45 @@
+result:
+  flow_name: "Marketplace Checkout and Fulfillment"
+  detail_level: "detailed_ux"
+  goal: "Enable buyers to complete purchases reliably while handling risk and failure cases."
+  actors:
+    - "buyer"
+    - "support_agent"
+    - "payment_gateway"
+    - "fraud_engine"
+  preconditions:
+    - "Cart contains at least one in-stock item"
+  trigger_entry_point:
+    - "Buyer taps Checkout from cart"
+  success_outcomes:
+    - "Order is confirmed with payment authorization"
+    - "Buyer receives confirmation and ETA"
+  stages:
+    - name: "Start Checkout"
+      objective: "Collect shipping and payment context"
+    - name: "Authorize and Evaluate Risk"
+      objective: "Validate payment and risk status"
+  main_flow:
+    - step: 1
+      actor: "buyer"
+      action: "Open checkout and confirm address"
+      system_response: "Prefill profile data and validate required fields"
+      dependency: "Profile Service"
+      validation_state: "missing_phone_error"
+  alternative_flows:
+    - id: "A1"
+      condition: "Buyer changes shipping method after payment pre-check"
+      path_summary: "Recalculate totals, reauthorize payment, return to review"
+  error_edge_cases:
+    - id: "E1"
+      condition: "Payment authorization timeout"
+      system_behavior: "Mark payment as pending and offer retry or support handoff"
+      recovery_options:
+        - "Retry authorization"
+        - "Switch payment method"
+  system_responses_dependencies:
+    - "POST /api/payments/authorize is retried once on transient failures"
+  notes_open_questions:
+    - "Should high-risk orders always require manual review?"
+  assumptions:
+    - "Risk decisions are returned within 4 seconds in normal conditions"

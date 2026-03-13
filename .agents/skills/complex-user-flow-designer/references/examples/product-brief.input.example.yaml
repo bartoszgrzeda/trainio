@@ -1,0 +1,36 @@
+request:
+  flow_name: "Subscription Onboarding to First Value"
+  detail_level: "high_level"
+  journey_type: "onboarding"
+  product_problem_statement: "New users complete sign-up but fail to activate key features in the first 24 hours."
+  actors:
+    - role: "new_user"
+      goals:
+        - "Create account quickly"
+        - "Reach first successful project setup"
+    - role: "lifecycle_system"
+      goals:
+        - "Detect drop-off and trigger recovery nudges"
+  entry_points:
+    - "Landing page CTA"
+    - "Referral invite link"
+  success_outcomes:
+    - "User completes setup checklist"
+    - "User performs first meaningful action"
+  constraints:
+    - "Email verification required"
+    - "Trial users cannot access premium automations"
+  known_dependencies:
+    services:
+      - "Identity Service"
+      - "Feature Flag Service"
+      - "Lifecycle Messaging"
+  known_edge_cases:
+    - "User skips template selection"
+    - "Verification email delayed"
+  cross_feature_interactions:
+    - "Auth -> Workspace Setup -> Notifications"
+  output_audience:
+    - "product"
+    - "ux"
+    - "stakeholders"
