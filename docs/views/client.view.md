@@ -78,6 +78,18 @@ Authenticated trainer managing client data.
   - Maximum length `500`.
 - Empty State: Placeholder `Add notes (optional)`.
 
+### 4. Training Plan
+
+- Purpose: Open client-specific training plan editor.
+- Fields/Data Shown: n/a.
+- Components: Secondary action button labeled `Client training plan`.
+- Behavior:
+  - Action is presented in a dedicated section separated from `Notes`.
+  - On tap, navigate to `client-training-plan` for selected `clientId`.
+- Rules:
+  - Disable action while save/delete requests are in progress.
+- Empty State: n/a.
+
 ## Actions
 
 | actionId | label | trigger | result |
@@ -86,6 +98,7 @@ Authenticated trainer managing client data.
 | pickBirthdate | Birthdate field | Tap field | Open native date picker and set `birthDate` |
 | clearBirthdate | X | Tap clear date action | Clear `birthDate` |
 | changeField | n/a | User edits any input | Update form draft and clear field-level error |
+| openClientTrainingPlan | Client training plan | Tap action in `Training Plan` section | Navigate to `/clients/{clientId}/training-plan` |
 | submitClientUpdate | Save | Tap primary button | Validate and update client via API |
 | submitClientDelete | X | Tap destructive button | Show confirmation and delete client via API |
 | cancelEditClient | Back | Tap back with unsaved changes | Show discard confirmation and navigate back if confirmed |

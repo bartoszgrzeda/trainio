@@ -10,6 +10,7 @@ import {
 interface PlanDayExerciseViewProps {
   dayIndex: number;
   exerciseIndex: number;
+  testIdPrefix?: string;
   value: PlanDayExerciseDraft;
   errors?: PlanDayExerciseErrors;
   exerciseOptions: ExerciseOption[];
@@ -38,6 +39,7 @@ function normalizeSearchValue(value: string): string {
 export function PlanDayExerciseView({
   dayIndex,
   exerciseIndex,
+  testIdPrefix = 'planTemplates',
   value,
   errors,
   exerciseOptions,
@@ -71,12 +73,12 @@ export function PlanDayExerciseView({
   return (
     <View
       style={styles.container}
-      testID={`section.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}`}>
+      testID={`section.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}`}>
       <View style={styles.fieldHeaderRow}>
         <Text style={styles.fieldLabel}>Exercise</Text>
         <View style={styles.exerciseActionsRow}>
           <Pressable
-            testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.move.up`}
+            testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.move.up`}
             accessibilityRole="button"
             accessibilityLabel={`Move exercise ${exerciseIndex + 1} up`}
             disabled={disabled || !canMoveUp}
@@ -90,7 +92,7 @@ export function PlanDayExerciseView({
           </Pressable>
 
           <Pressable
-            testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.move.down`}
+            testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.move.down`}
             accessibilityRole="button"
             accessibilityLabel={`Move exercise ${exerciseIndex + 1} down`}
             disabled={disabled || !canMoveDown}
@@ -104,7 +106,7 @@ export function PlanDayExerciseView({
           </Pressable>
 
           <Pressable
-            testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.remove`}
+            testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.remove`}
             accessibilityRole="button"
             accessibilityLabel={`Remove exercise ${exerciseIndex + 1}`}
             disabled={disabled || !canRemoveExercise}
@@ -120,7 +122,7 @@ export function PlanDayExerciseView({
       </View>
       <View style={styles.searchInputRow}>
         <TextInput
-          testID={`input.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.search`}
+          testID={`input.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.search`}
           accessibilityLabel={`Search exercise for row ${exerciseIndex + 1}`}
           autoCapitalize="words"
           autoCorrect={false}
@@ -141,7 +143,7 @@ export function PlanDayExerciseView({
         />
 
         <Pressable
-          testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.selection.clear`}
+          testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.selection.clear`}
           accessibilityRole="button"
           accessibilityLabel={`Clear selected exercise ${exerciseIndex + 1}`}
           disabled={disabled || !value.exerciseId}
@@ -173,7 +175,7 @@ export function PlanDayExerciseView({
               return (
                 <Pressable
                   key={option.id}
-                  testID={`item.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.option.${option.id}`}
+                  testID={`item.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.option.${option.id}`}
                   accessibilityRole="button"
                   disabled={disabled}
                   onPress={() => {
@@ -210,6 +212,7 @@ export function PlanDayExerciseView({
               dayIndex={dayIndex}
               exerciseIndex={exerciseIndex}
               setIndex={setIndex}
+              testIdPrefix={testIdPrefix}
               value={setItem}
               errors={errors?.sets[setIndex]}
               disabled={disabled}
@@ -226,7 +229,7 @@ export function PlanDayExerciseView({
 
         <View style={styles.setItemCell}>
           <Pressable
-            testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.add`}
+            testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.set.add`}
             accessibilityRole="button"
             accessibilityLabel={`Add set to exercise ${exerciseIndex + 1}`}
             disabled={disabled}

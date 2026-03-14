@@ -6,6 +6,7 @@ interface ExerciseSetViewProps {
   dayIndex: number;
   exerciseIndex: number;
   setIndex: number;
+  testIdPrefix?: string;
   value: ExerciseSetDraft;
   errors?: ExerciseSetErrors;
   disabled?: boolean;
@@ -18,6 +19,7 @@ export function ExerciseSetView({
   dayIndex,
   exerciseIndex,
   setIndex,
+  testIdPrefix = 'planTemplates',
   value,
   errors,
   disabled = false,
@@ -26,11 +28,13 @@ export function ExerciseSetView({
   onRemove,
 }: ExerciseSetViewProps) {
   return (
-    <View style={styles.container} testID={`section.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}`}>
+    <View
+      style={styles.container}
+      testID={`section.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}`}>
       <Text style={styles.fieldLabel}>Repeats</Text>
       <View style={styles.inputRow}>
         <TextInput
-          testID={`input.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.repeats`}
+          testID={`input.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.repeats`}
           accessibilityLabel={`Set ${setIndex + 1} repeats`}
           editable={!disabled}
           keyboardType="number-pad"
@@ -41,7 +45,7 @@ export function ExerciseSetView({
         />
 
         <Pressable
-          testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.remove`}
+          testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.remove`}
           accessibilityRole="button"
           accessibilityLabel={`Remove set ${setIndex + 1}`}
           disabled={disabled || !canRemove}

@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ClientListScreen } from './src/screens/ClientListScreen';
 import { ClientNewScreen } from './src/screens/ClientNewScreen';
 import { ClientScreen } from './src/screens/ClientScreen';
+import { ClientTrainingPlanScreen } from './src/screens/ClientTrainingPlanScreen';
 import { ExerciseScreen } from './src/screens/ExerciseScreen';
 import { ExerciseNewScreen } from './src/screens/ExerciseNewScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -31,12 +32,14 @@ type StaticAppRoute =
 
 type ExerciseDetailsRoute = `/settings/exercises/${string}`;
 type ClientDetailsRoute = `/clients/${string}`;
+type ClientTrainingPlanRoute = `/clients/${string}/training-plan`;
 type PlanTemplateDetailsRoute = `/settings/plan-templates/${string}`;
 
 type AppRoute =
   | StaticAppRoute
   | ExerciseDetailsRoute
   | ClientDetailsRoute
+  | ClientTrainingPlanRoute
   | PlanTemplateDetailsRoute;
 
 function normalizeExerciseDetailsRoute(route: string): ExerciseDetailsRoute | null {
@@ -67,6 +70,21 @@ function normalizeClientDetailsRoute(route: string): ClientDetailsRoute | null {
   }
 
   return `/clients/${encodeURIComponent(normalizedClientId)}`;
+}
+
+function normalizeClientTrainingPlanRoute(route: string): ClientTrainingPlanRoute | null {
+  const match = route.match(/^\/clients\/([^/]+)\/training-plan$/);
+  if (!match) {
+    return null;
+  }
+
+  const decodedClientId = decodeURIComponent(match[1] ?? '');
+  const normalizedClientId = decodedClientId.trim();
+  if (!normalizedClientId || normalizedClientId.toLowerCase() === 'new') {
+    return null;
+  }
+
+  return `/clients/${encodeURIComponent(normalizedClientId)}/training-plan`;
 }
 
 function normalizePlanTemplateDetailsRoute(route: string): PlanTemplateDetailsRoute | null {
@@ -146,6 +164,11 @@ function normalizeRoute(route: string): AppRoute | null {
   const planTemplateDetailsRoute = normalizePlanTemplateDetailsRoute(route);
   if (planTemplateDetailsRoute) {
     return planTemplateDetailsRoute;
+  }
+
+  const clientTrainingPlanRoute = normalizeClientTrainingPlanRoute(route);
+  if (clientTrainingPlanRoute) {
+    return clientTrainingPlanRoute;
   }
 
   const clientDetailsRoute = normalizeClientDetailsRoute(route);
@@ -261,6 +284,12 @@ function App() {
     currentRoute !== '/clients/new'
       ? decodeURIComponent(clientDetailsRouteMatch[1] ?? '')
       : null;
+  const clientTrainingPlanRouteMatch = currentRoute.match(
+    /^\/clients\/([^/]+)\/training-plan$/,
+  );
+  const clientIdFromTrainingPlanRoute = clientTrainingPlanRouteMatch
+    ? decodeURIComponent(clientTrainingPlanRouteMatch[1] ?? '')
+    : null;
   const planTemplateDetailsRouteMatch = currentRoute.match(/^\/settings\/plan-templates\/([^/]+)$/);
   const planTemplateIdFromRoute =
     planTemplateDetailsRouteMatch &&
@@ -315,6 +344,15 @@ function App() {
 
     if (currentRoute === '/clients') {
       return <ClientListScreen navigation={navigation} />;
+    }
+
+    if (clientIdFromTrainingPlanRoute) {
+      return (
+        <ClientTrainingPlanScreen
+          navigation={navigation}
+          clientId={clientIdFromTrainingPlanRoute}
+        />
+      );
     }
 
     if (clientIdFromRoute) {

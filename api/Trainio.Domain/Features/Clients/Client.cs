@@ -6,6 +6,8 @@ namespace Trainio.Domain.Features.Clients;
 
 public sealed class Client : BaseEntity
 {
+    private List<PlanDay> _trainingPlanDays;
+
     private Client()
     {
         FirstName = null!;
@@ -14,6 +16,8 @@ public sealed class Client : BaseEntity
         PhoneNumber = null!;
         Gender = null!;
         Notes = null!;
+        TrainingPlanName = null;
+        _trainingPlanDays = [];
     }
 
     [JsonConstructor]
@@ -24,7 +28,9 @@ public sealed class Client : BaseEntity
         BirthDate birthDate,
         PhoneNumber phoneNumber,
         Gender gender,
-        Notes notes)
+        Notes notes,
+        PlanName? trainingPlanName = null,
+        IReadOnlyList<PlanDay>? trainingPlanDays = null)
         : base(id)
     {
         FirstName = Require(firstName, nameof(firstName));
@@ -33,6 +39,8 @@ public sealed class Client : BaseEntity
         PhoneNumber = Require(phoneNumber, nameof(phoneNumber));
         Gender = Require(gender, nameof(gender));
         Notes = Require(notes, nameof(notes));
+        TrainingPlanName = trainingPlanName;
+        _trainingPlanDays = NormalizeOptionalTrainingPlanDays(trainingPlanName, trainingPlanDays);
     }
 
     public FirstName FirstName { get; private set; }
@@ -46,6 +54,10 @@ public sealed class Client : BaseEntity
     public Gender Gender { get; private set; }
 
     public Notes Notes { get; private set; }
+
+    public PlanName? TrainingPlanName { get; private set; }
+
+    public IReadOnlyList<PlanDay> TrainingPlanDays => _trainingPlanDays.AsReadOnly();
 
     public string FullName => $"{FirstName.Value} {LastName.Value}";
 
@@ -99,6 +111,45 @@ public sealed class Client : BaseEntity
         PhoneNumber = validatedPhoneNumber;
         Gender = validatedGender;
         Notes = validatedNotes;
+    }
+
+    public void UpdateTrainingPlan(PlanName trainingPlanName, IReadOnlyList<PlanDay> trainingPlanDays)
+    {
+        TrainingPlanName = Require(trainingPlanName, nameof(trainingPlanName));
+        _trainingPlanDays = NormalizeTrainingPlanDays(trainingPlanDays);
+    }
+
+    private static List<PlanDay> NormalizeOptionalTrainingPlanDays(
+        PlanName? trainingPlanName,
+        IReadOnlyList<PlanDay>? trainingPlanDays)
+    {
+        if (trainingPlanName is null)
+        {
+            return [];
+        }
+
+        return NormalizeTrainingPlanDays(trainingPlanDays);
+    }
+
+    private static List<PlanDay> NormalizeTrainingPlanDays(IReadOnlyList<PlanDay>? trainingPlanDays)
+    {
+        if (trainingPlanDays is null)
+        {
+            throw new DomainException("trainingPlanDays is required.");
+        }
+
+        if (trainingPlanDays.Count == 0)
+        {
+            throw new DomainException("trainingPlanDays must contain at least one item.");
+        }
+
+        var normalized = new List<PlanDay>(trainingPlanDays.Count);
+        for (var index = 0; index < trainingPlanDays.Count; index++)
+        {
+            normalized.Add(Require(trainingPlanDays[index], $"trainingPlanDays[{index}]"));
+        }
+
+        return normalized;
     }
 
     private static T Require<T>(T? value, string fieldName) where T : class

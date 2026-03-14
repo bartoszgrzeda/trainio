@@ -33,6 +33,7 @@ public sealed class TrainioDbContext : DbContext
             builder.ToTable("clients");
             builder.HasKey(x => x.Id);
             builder.Ignore(x => x.FullName);
+            builder.Ignore(x => x.TrainingPlanDays);
 
             builder.OwnsOne(x => x.FirstName, owned =>
             {
@@ -63,6 +64,28 @@ public sealed class TrainioDbContext : DbContext
             {
                 owned.Property(x => x.Value).HasColumnName("Notes").HasMaxLength(2000).IsRequired();
             });
+
+            builder
+                .Property(x => x.TrainingPlanName)
+                .HasColumnName("TrainingPlanName")
+                .HasMaxLength(200)
+                .HasConversion(
+                    value => value == null ? null : value.Value,
+                    value => string.IsNullOrWhiteSpace(value) ? null : PlanName.From(value));
+
+            var trainingPlanDaysComparer = new ValueComparer<List<PlanDay>>(
+                (left, right) => SerializeDays(left) == SerializeDays(right),
+                value => SerializeDays(value).GetHashCode(StringComparison.Ordinal),
+                value => DeserializeDays(SerializeDays(value)));
+
+            builder
+                .Property<List<PlanDay>>("_trainingPlanDays")
+                .HasColumnName("TrainingPlanDays")
+                .HasConversion(
+                    value => SerializeDays(value),
+                    value => DeserializeDays(value))
+                .Metadata
+                .SetValueComparer(trainingPlanDaysComparer);
         });
 
         modelBuilder.Entity<Exercise>(builder =>

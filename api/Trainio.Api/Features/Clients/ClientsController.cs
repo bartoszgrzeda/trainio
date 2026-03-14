@@ -55,6 +55,22 @@ public sealed class ClientsController : ControllerBase
         return Ok(ToResponse(client));
     }
 
+    [HttpGet("training-plan/get")]
+    [ProducesResponseType(typeof(ClientTrainingPlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ClientTrainingPlanResponse>> GetTrainingPlanAsync(
+        [FromQuery] Guid clientId,
+        CancellationToken cancellationToken)
+    {
+        var trainingPlan = await _clientService.GetTrainingPlanAsync(clientId, cancellationToken);
+        if (trainingPlan is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToTrainingPlanResponse(trainingPlan));
+    }
+
     [HttpGet("list")]
     [ProducesResponseType(typeof(ClientListResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ClientListResponse>> ListAsync(
@@ -99,6 +115,34 @@ public sealed class ClientsController : ControllerBase
         return Ok(ToResponse(updated));
     }
 
+    [HttpPost("training-plan/update")]
+    [ProducesResponseType(typeof(UpdateClientTrainingPlanResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UpdateClientTrainingPlanResponse>> UpdateTrainingPlanAsync(
+        [FromBody] UpdateClientTrainingPlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var updated = await _clientService.UpdateTrainingPlanAsync(
+            new UpdateClientTrainingPlanCommand(
+                request.ClientId,
+                request.Name,
+                ToTrainingPlanDayCommands(request.Days)),
+            cancellationToken);
+
+        if (updated is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToUpdateTrainingPlanResponse(updated));
+    }
+
     [HttpPost("delete")]
     [ProducesResponseType(typeof(DeleteClientResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -133,6 +177,60 @@ public sealed class ClientsController : ControllerBase
             client.Notes,
             client.FullName);
     }
+
+    private static ClientTrainingPlanResponse ToTrainingPlanResponse(ClientTrainingPlanDto trainingPlan)
+    {
+        return new ClientTrainingPlanResponse(
+            trainingPlan.ClientId,
+            trainingPlan.ClientName,
+            trainingPlan.Name,
+            trainingPlan.Days
+                .Select(day => new ClientTrainingPlanDayResponse(
+                    day.Name,
+                    day.Exercises
+                        .Select(exercise => new ClientTrainingPlanDayExerciseResponse(
+                            exercise.ExerciseId,
+                            exercise.Series.Select(set => new ClientTrainingPlanExerciseSetResponse(set.RepeatsCount)).ToArray()))
+                        .ToArray()))
+                .ToArray(),
+            new ClientTrainingPlanDefaultTemplateResponse(
+                trainingPlan.DefaultTemplate.Id,
+                trainingPlan.DefaultTemplate.Name,
+                trainingPlan.DefaultTemplate.IsConfigured));
+    }
+
+    private static UpdateClientTrainingPlanResponse ToUpdateTrainingPlanResponse(UpdatedClientTrainingPlanDto trainingPlan)
+    {
+        return new UpdateClientTrainingPlanResponse(
+            trainingPlan.ClientId,
+            trainingPlan.Name,
+            trainingPlan.Days
+                .Select(day => new ClientTrainingPlanDayResponse(
+                    day.Name,
+                    day.Exercises
+                        .Select(exercise => new ClientTrainingPlanDayExerciseResponse(
+                            exercise.ExerciseId,
+                            exercise.Series.Select(set => new ClientTrainingPlanExerciseSetResponse(set.RepeatsCount)).ToArray()))
+                        .ToArray()))
+                .ToArray(),
+            trainingPlan.UpdatedAt);
+    }
+
+    private static IReadOnlyList<ClientTrainingPlanDayCommand> ToTrainingPlanDayCommands(
+        IReadOnlyList<ClientTrainingPlanDayRequest>? days)
+    {
+        return (days ?? [])
+            .Select(day => new ClientTrainingPlanDayCommand(
+                day.Name,
+                (day.Exercises ?? [])
+                    .Select(exercise => new ClientTrainingPlanDayExerciseCommand(
+                        exercise.ExerciseId,
+                        (exercise.Series ?? [])
+                            .Select(set => new ClientTrainingPlanExerciseSetCommand(set.RepeatsCount))
+                            .ToArray()))
+                    .ToArray()))
+            .ToArray();
+    }
 }
 
 public sealed record CreateClientRequest(
@@ -154,6 +252,21 @@ public sealed record UpdateClientRequest(
 
 public sealed record DeleteClientRequest(Guid Id);
 
+public sealed record UpdateClientTrainingPlanRequest(
+    Guid ClientId,
+    string Name,
+    IReadOnlyList<ClientTrainingPlanDayRequest> Days);
+
+public sealed record ClientTrainingPlanDayRequest(
+    string Name,
+    IReadOnlyList<ClientTrainingPlanDayExerciseRequest> Exercises);
+
+public sealed record ClientTrainingPlanDayExerciseRequest(
+    Guid ExerciseId,
+    IReadOnlyList<ClientTrainingPlanExerciseSetRequest> Series);
+
+public sealed record ClientTrainingPlanExerciseSetRequest(int RepeatsCount);
+
 public sealed record ClientResponse(
     Guid Id,
     string FirstName,
@@ -169,3 +282,31 @@ public sealed record DeleteClientResponse(bool Success);
 public sealed record ClientListResponse(IReadOnlyList<ClientListItemResponse> Clients);
 
 public sealed record ClientListItemResponse(Guid Id, string FullName);
+
+public sealed record ClientTrainingPlanResponse(
+    Guid ClientId,
+    string ClientName,
+    string Name,
+    IReadOnlyList<ClientTrainingPlanDayResponse> Days,
+    ClientTrainingPlanDefaultTemplateResponse DefaultTemplate);
+
+public sealed record UpdateClientTrainingPlanResponse(
+    Guid ClientId,
+    string Name,
+    IReadOnlyList<ClientTrainingPlanDayResponse> Days,
+    DateTimeOffset UpdatedAt);
+
+public sealed record ClientTrainingPlanDayResponse(
+    string Name,
+    IReadOnlyList<ClientTrainingPlanDayExerciseResponse> Exercises);
+
+public sealed record ClientTrainingPlanDayExerciseResponse(
+    Guid ExerciseId,
+    IReadOnlyList<ClientTrainingPlanExerciseSetResponse> Series);
+
+public sealed record ClientTrainingPlanExerciseSetResponse(int RepeatsCount);
+
+public sealed record ClientTrainingPlanDefaultTemplateResponse(
+    Guid? Id,
+    string? Name,
+    bool IsConfigured);

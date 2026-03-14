@@ -11,4 +11,10 @@ public interface IClientService
     Task<ClientDto?> UpdateAsync(UpdateClientCommand command, CancellationToken cancellationToken);
 
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<ClientTrainingPlanDto?> GetTrainingPlanAsync(Guid clientId, CancellationToken cancellationToken);
+
+    Task<UpdatedClientTrainingPlanDto?> UpdateTrainingPlanAsync(
+        UpdateClientTrainingPlanCommand command,
+        CancellationToken cancellationToken);
 }

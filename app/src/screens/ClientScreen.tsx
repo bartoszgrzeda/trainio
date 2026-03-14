@@ -81,6 +81,10 @@ interface ClientResponse {
   fullName?: string;
 }
 
+interface ClientTrainingPlanSummaryResponse {
+  name?: string;
+}
+
 interface ClientListItem {
   id: string;
   fullName: string;
@@ -455,6 +459,28 @@ async function fetchClient(clientId: string): Promise<ClientResponse> {
   return (await response.json()) as ClientResponse;
 }
 
+async function fetchClientTrainingPlanName(clientId: string): Promise<string | null> {
+  const params = new URLSearchParams({
+    clientId,
+  });
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/clients/training-plan/get?${params.toString()}`,
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as ClientTrainingPlanSummaryResponse;
+    const normalizedName = payload.name?.trim() ?? '';
+    return normalizedName.length > 0 ? normalizedName : null;
+  } catch {
+    return null;
+  }
+}
+
 async function checkClientExists(clientId: string): Promise<boolean> {
   const response = await fetch(`${API_BASE_URL}/api/clients/list?query=`);
   if (!response.ok) {
@@ -512,6 +538,9 @@ export function ClientScreen({
   const [bannerState, setBannerState] = useState<BannerState | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isClientAvailable, setIsClientAvailable] = useState(false);
+  const [clientTrainingPlanName, setClientTrainingPlanName] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     draftRef.current = draft;
@@ -597,11 +626,13 @@ export function ClientScreen({
   const loadClient = useCallback(async () => {
     setIsInitializing(true);
     setScreenState('loading');
+    setClientTrainingPlanName(null);
 
     try {
       const response = await fetchClient(clientId);
       const mappedValues = mapClientValuesFromResponse(response);
       const resolvedId = response.id?.trim() || clientId;
+      const resolvedTrainingPlanName = await fetchClientTrainingPlanName(resolvedId);
 
       const nextDraft: ClientFormDraft = {
         id: resolvedId,
@@ -616,6 +647,7 @@ export function ClientScreen({
       setFieldErrors({});
       setBannerState(null);
       setIsClientAvailable(true);
+      setClientTrainingPlanName(resolvedTrainingPlanName);
       setScreenState(resolveInteractiveState(mappedValues));
     } catch (error) {
       const statusCode = (error as ApiError).status;
@@ -642,6 +674,7 @@ export function ClientScreen({
       }
 
       setIsClientAvailable(false);
+      setClientTrainingPlanName(null);
     } finally {
       setIsInitializing(false);
     }
@@ -1033,6 +1066,21 @@ export function ClientScreen({
     [confirmDiscardChanges, navigateToRoute],
   );
 
+  const handleOpenClientTrainingPlan = useCallback(() => {
+    if (!isClientAvailable || draft.isSaving || draft.isDeleting) {
+      return;
+    }
+
+    const targetClientId = draftRef.current.id.trim() || clientId;
+    navigateToRoute(`/clients/${encodeURIComponent(targetClientId)}/training-plan`);
+  }, [
+    clientId,
+    draft.isDeleting,
+    draft.isSaving,
+    isClientAvailable,
+    navigateToRoute,
+  ]);
+
   const computedErrors = useMemo(
     () => validateValues(extractValues(draft)),
     [draft],
@@ -1058,6 +1106,11 @@ export function ClientScreen({
     draft.isSaving ||
     draft.isDeleting ||
     screenState === 'offline';
+
+  const hasClientTrainingPlan = clientTrainingPlanName !== null;
+  const clientTrainingPlanButtonLabel = hasClientTrainingPlan
+    ? 'Edit training plan'
+    : 'Create training plan';
 
   const contentBottomPadding = useMemo(() => 24, []);
 
@@ -1105,6 +1158,7 @@ export function ClientScreen({
 
         <View style={styles.content}>
           <ScrollView
+            testID="scroll.clients.details"
             style={styles.scrollView}
             contentContainerStyle={[
               styles.scrollContent,
@@ -1318,6 +1372,32 @@ export function ClientScreen({
                     ) : null}
                   </View>
                 </View>
+
+                <View style={styles.section}>
+                  <View style={styles.fieldGroup}>
+                    <Text style={styles.fieldLabel}>Training Plan</Text>
+                    {hasClientTrainingPlan ? (
+                      <Text style={styles.trainingPlanName}>{clientTrainingPlanName}</Text>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    testID="button.clients.trainingPlan.open"
+                    accessibilityRole="button"
+                    disabled={draft.isSaving || draft.isDeleting || !isClientAvailable}
+                    onPress={handleOpenClientTrainingPlan}
+                    style={({ pressed }) => [
+                      styles.trainingPlanButton,
+                      (draft.isSaving || draft.isDeleting || !isClientAvailable) &&
+                        styles.buttonDisabled,
+                      pressed &&
+                        !(draft.isSaving || draft.isDeleting || !isClientAvailable) &&
+                        styles.trainingPlanButtonPressed,
+                    ]}>
+                    <Text style={styles.trainingPlanButtonText}>
+                      {clientTrainingPlanButtonLabel}
+                    </Text>
+                  </Pressable>
+                </View>
               </>
             )}
           </ScrollView>
@@ -1528,6 +1608,31 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     textAlign: 'right',
+  },
+  trainingPlanName: {
+    marginTop: 6,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  trainingPlanButton: {
+    minHeight: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  trainingPlanButtonPressed: {
+    backgroundColor: '#DBEAFE',
+  },
+  trainingPlanButtonText: {
+    color: '#1D4ED8',
+    fontSize: 15,
+    fontWeight: '700',
   },
   fieldErrorText: {
     fontSize: 12,

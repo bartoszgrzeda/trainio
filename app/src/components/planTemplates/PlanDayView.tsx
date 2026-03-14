@@ -9,6 +9,7 @@ import {
 
 interface PlanDayViewProps {
   dayIndex: number;
+  testIdPrefix?: string;
   value: PlanDayDraft;
   errors?: PlanDayErrors;
   topSlot?: React.ReactNode;
@@ -32,6 +33,7 @@ interface PlanDayViewProps {
 
 export function PlanDayView({
   dayIndex,
+  testIdPrefix = 'planTemplates',
   value,
   errors,
   topSlot,
@@ -53,7 +55,9 @@ export function PlanDayView({
   onChangeSetRepeats,
 }: PlanDayViewProps) {
   return (
-    <View style={styles.container} testID={`section.planTemplates.day.${dayIndex}.editor`}>
+    <View
+      style={styles.container}
+      testID={`section.${testIdPrefix}.day.${dayIndex}.editor`}>
       {topSlot ? (
         <View style={styles.topSlotContainer}>
           {topSlot}
@@ -66,7 +70,7 @@ export function PlanDayView({
           <Text style={styles.dayTitle}>{`Day ${dayIndex + 1}`}</Text>
 
           <Pressable
-            testID={`button.planTemplates.day.${dayIndex}.remove`}
+            testID={`button.${testIdPrefix}.day.${dayIndex}.remove`}
             accessibilityRole="button"
             accessibilityLabel={`Remove day ${dayIndex + 1}`}
             disabled={disabled || !canRemoveDay}
@@ -83,7 +87,7 @@ export function PlanDayView({
 
       <Text style={styles.fieldLabel}>Day name</Text>
       <TextInput
-        testID={`input.planTemplates.day.${dayIndex}.name`}
+        testID={`input.${testIdPrefix}.day.${dayIndex}.name`}
         accessibilityLabel={`Plan day ${dayIndex + 1} name`}
         autoCapitalize="words"
         autoCorrect={false}
@@ -100,7 +104,7 @@ export function PlanDayView({
         <Text style={styles.exercisesTitle}>Exercises</Text>
 
         <Pressable
-          testID={`button.planTemplates.day.${dayIndex}.exercise.add`}
+          testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.add`}
           accessibilityRole="button"
           accessibilityLabel={`Add exercise to day ${dayIndex + 1}`}
           disabled={disabled}
@@ -122,6 +126,7 @@ export function PlanDayView({
             key={exercise.id}
             dayIndex={dayIndex}
             exerciseIndex={exerciseIndex}
+            testIdPrefix={testIdPrefix}
             value={exercise}
             errors={errors?.exerciseItems[exerciseIndex]}
             exerciseOptions={exerciseOptions}

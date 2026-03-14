@@ -66,4 +66,38 @@ public sealed class ClientTests
         restored.Gender.Should().Be(client.Gender);
         restored.Notes.Should().Be(client.Notes);
     }
+
+    [Fact]
+    public void UpdateTrainingPlan_ShouldSetNormalizedNameAndDays()
+    {
+        var client = Client.From(
+            FirstName.From("Anna"),
+            LastName.From("Kowalska"),
+            BirthDate.From(new DateOnly(1992, 3, 15)),
+            PhoneNumber.From("+48123456789"),
+            Gender.Female,
+            Notes.Empty);
+
+        client.UpdateTrainingPlan(
+            PlanName.From("  Starter Plan  "),
+            [
+                PlanDay.From(
+                    PlanDayName.From("  Day 1  "),
+                    [
+                        PlanDayExercise.From(
+                            EntityId.From(Guid.NewGuid()),
+                            0,
+                            [
+                                ExerciseSet.From(RepeatsCount.From(10)),
+                                ExerciseSet.From(RepeatsCount.From(8)),
+                            ]),
+                    ]),
+            ]);
+
+        client.TrainingPlanName.Should().Be(PlanName.From("Starter Plan"));
+        client.TrainingPlanDays.Should().HaveCount(1);
+        client.TrainingPlanDays[0].Name.Should().Be(PlanDayName.From("Day 1"));
+        client.TrainingPlanDays[0].Exercises.Should().HaveCount(1);
+        client.TrainingPlanDays[0].Exercises[0].Series.Select(series => series.RepeatsCount.Value).Should().Equal(10, 8);
+    }
 }

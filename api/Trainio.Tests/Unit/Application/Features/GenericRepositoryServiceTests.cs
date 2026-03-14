@@ -90,6 +90,63 @@ public sealed class ClientServiceTests
             .Should()
             .Equal("Adam Nowak", "Zoe Nowak");
     }
+
+    [Fact]
+    public async Task UpdateTrainingPlanAsync_ShouldPersistTrainingPlan()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var root = new InMemoryDatabaseRoot();
+        var options = TestDbContextFactory.CreateOptions(databaseName, root);
+
+        Guid clientId;
+        using (var createContext = new TrainioDbContext(options))
+        {
+            var createService = new ClientService(new RepositoryFactory(createContext), new UnitOfWork(createContext));
+            var created = await createService.CreateAsync(
+                new CreateClientCommand(
+                    "Anna",
+                    "Kowalska",
+                    new DateOnly(1992, 3, 15),
+                    "+48123456789",
+                    "female",
+                    string.Empty),
+                CancellationToken.None);
+            clientId = created.Id;
+        }
+
+        using (var updateContext = new TrainioDbContext(options))
+        {
+            var updateService = new ClientService(new RepositoryFactory(updateContext), new UnitOfWork(updateContext));
+            var updated = await updateService.UpdateTrainingPlanAsync(
+                new UpdateClientTrainingPlanCommand(
+                    clientId,
+                    "  Starter Plan  ",
+                    [
+                        new ClientTrainingPlanDayCommand(
+                            "  Day 1  ",
+                            [
+                                new ClientTrainingPlanDayExerciseCommand(
+                                    Guid.NewGuid(),
+                                    [
+                                        new ClientTrainingPlanExerciseSetCommand(10),
+                                        new ClientTrainingPlanExerciseSetCommand(8),
+                                    ]),
+                            ]),
+                    ]),
+                CancellationToken.None);
+
+            updated.Should().NotBeNull();
+            updated!.Name.Should().Be("Starter Plan");
+            updated.Days.Should().HaveCount(1);
+        }
+
+        using var verificationContext = new TrainioDbContext(options);
+        var persisted = await verificationContext.Clients.AsNoTracking().SingleAsync();
+        persisted.TrainingPlanName.Should().NotBeNull();
+        persisted.TrainingPlanName!.Value.Should().Be("Starter Plan");
+        persisted.TrainingPlanDays.Should().HaveCount(1);
+        persisted.TrainingPlanDays[0].Name.Value.Should().Be("Day 1");
+    }
 }
 
 public sealed class ExerciseServiceTests

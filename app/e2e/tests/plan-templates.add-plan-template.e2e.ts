@@ -1,6 +1,9 @@
 import { device } from 'detox';
 import { dismissIosOkAlertIfVisible, uniqueSuffix } from '../helpers/device.helper';
+import { createExerciseForPlanTemplates } from '../helpers/exercise.helper';
 import { BottomMenuScreen } from '../screens/bottom-menu.screen';
+import { ExerciseListScreen } from '../screens/exercise-list.screen';
+import { ExerciseNewScreen } from '../screens/exercise-new.screen';
 import { PlanTemplateListScreen } from '../screens/plan-template-list.screen';
 import { PlanTemplateNewScreen } from '../screens/plan-template-new.screen';
 import { SettingsScreen } from '../screens/settings.screen';
@@ -8,6 +11,8 @@ import { SettingsScreen } from '../screens/settings.screen';
 describe('plan-templates.add-plan-template', () => {
   const bottomMenu = new BottomMenuScreen();
   const settings = new SettingsScreen();
+  const exercisesList = new ExerciseListScreen();
+  const exerciseNew = new ExerciseNewScreen();
   const planTemplateList = new PlanTemplateListScreen();
   const planTemplateNew = new PlanTemplateNewScreen();
 
@@ -17,6 +22,13 @@ describe('plan-templates.add-plan-template', () => {
 
   it('adds a plan template and shows it in the list', async () => {
     const planTemplateName = `E2E Plan Template ${uniqueSuffix()}`;
+
+    await createExerciseForPlanTemplates({
+      bottomMenu,
+      settings,
+      exercisesList,
+      exerciseNew,
+    });
 
     await bottomMenu.openSettings();
     await settings.waitForVisible();
