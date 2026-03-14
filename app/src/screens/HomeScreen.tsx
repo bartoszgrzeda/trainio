@@ -437,7 +437,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Text style={[styles.sectionTitle, styles.sectionTitleWithAction]}>
-                Today Training
+                Today Trainings
               </Text>
               <Pressable
                 testID="button.home.addTraining"

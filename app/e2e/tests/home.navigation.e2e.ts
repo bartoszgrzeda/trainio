@@ -12,7 +12,10 @@ describe('home.navigation', () => {
     await home.waitForVisible();
     await home.openAddTraining();
 
-    await waitFor(element(by.id('screen.trainings.new')))
+    await waitFor(element(by.id('button.trainings.client.open')))
+      .toBeVisible()
+      .withTimeout(15000);
+    await waitFor(element(by.id('button.trainings.save')))
       .toBeVisible()
       .withTimeout(15000);
   });

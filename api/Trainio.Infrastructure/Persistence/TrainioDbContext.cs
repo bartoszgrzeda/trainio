@@ -5,6 +5,7 @@ using Trainio.Domain.Features.Clients;
 using Trainio.Domain.Features.Exercises;
 using Trainio.Domain.Features.PlanTemplates;
 using Trainio.Domain.Features.Profile;
+using Trainio.Domain.Features.Trainings;
 using Trainio.Domain.ValueObjects;
 
 namespace Trainio.Infrastructure.Persistence;
@@ -25,6 +26,8 @@ public sealed class TrainioDbContext : DbContext
     public DbSet<PlanTemplate> PlanTemplates => Set<PlanTemplate>();
 
     public DbSet<Profile> Profiles => Set<Profile>();
+
+    public DbSet<Training> Trainings => Set<Training>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +155,27 @@ public sealed class TrainioDbContext : DbContext
             {
                 owned.Property(x => x.Value).HasColumnName("PhoneNumber").HasMaxLength(64).IsRequired();
             });
+        });
+
+        modelBuilder.Entity<Training>(builder =>
+        {
+            builder.ToTable("trainings");
+            builder.HasKey(x => x.Id);
+
+            builder.OwnsOne(x => x.ClientId, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("ClientId").IsRequired();
+            });
+
+            builder.Property(x => x.StartAt).HasColumnName("StartAt").IsRequired();
+            builder.Property(x => x.EndAt).HasColumnName("EndAt").IsRequired();
+
+            builder.OwnsOne(x => x.Notes, owned =>
+            {
+                owned.Property(x => x.Value).HasColumnName("Notes").HasMaxLength(500).IsRequired();
+            });
+
+            builder.Property(x => x.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
         });
     }
 

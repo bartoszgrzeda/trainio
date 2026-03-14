@@ -14,6 +14,7 @@ import { PlanTemplateScreen } from './src/screens/PlanTemplateScreen';
 import { SettingsExercisesScreen } from './src/screens/SettingsExercisesScreen';
 import { SettingsProfileScreen } from './src/screens/SettingsProfileScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { TrainingNewScreen } from './src/screens/TrainingNewScreen';
 
 type StaticAppRoute =
   | '/home'
@@ -299,13 +300,7 @@ function App() {
 
   const renderCurrentScreen = () => {
     if (currentRoute === '/trainings/new') {
-      return (
-        <RoutePlaceholderScreen
-          testID="screen.trainings.new"
-          title="Training Creation"
-          onBack={goBack}
-        />
-      );
+      return <TrainingNewScreen navigation={navigation} />;
     }
 
     if (currentRoute === '/training/start') {

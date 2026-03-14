@@ -19,6 +19,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { SearchableSelectModal } from '../components/shared/SearchableSelectModal';
 import { PlanDayView } from '../components/planTemplates/PlanDayView';
 import { ExerciseOption, PlanDayDraft } from '../components/planTemplates/types';
 import { getApiBaseUrl } from '../config/api';
@@ -340,8 +341,10 @@ function dedupeAndSortPlanTemplates(
   });
 }
 
-async function fetchPlanTemplatesList(): Promise<PlanTemplateListItem[]> {
-  const response = await fetch(`${API_BASE_URL}/api/plan-templates/list?query=`);
+async function fetchPlanTemplatesList(query: string): Promise<PlanTemplateListItem[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/plan-templates/list?query=${encodeURIComponent(query)}`,
+  );
   if (!response.ok) {
     const errorMessage = await readErrorMessage(
       response,
@@ -415,6 +418,7 @@ export function ClientTrainingPlanScreen({
   const draftRef = useRef<ClientTrainingPlanDraft>(buildInitialDraft(clientId));
   const originalSnapshotRef = useRef<string | null>(null);
   const isDirtyRef = useRef(false);
+  const templateSearchRequestIdRef = useRef(0);
 
   const [screenState, setScreenState] =
     useState<ClientTrainingPlanViewState>('loading');
@@ -427,8 +431,9 @@ export function ClientTrainingPlanScreen({
   const [isNameTouched, setIsNameTouched] = useState(false);
   const [bannerState, setBannerState] = useState<BannerState | null>(null);
   const [templateOptions, setTemplateOptions] = useState<PlanTemplateListItem[]>([]);
-  const [isTemplateListVisible, setIsTemplateListVisible] = useState(false);
+  const [isTemplatePickerVisible, setIsTemplatePickerVisible] = useState(false);
   const [isTemplateListLoading, setIsTemplateListLoading] = useState(false);
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
 
   useEffect(() => {
     draftRef.current = draft;
@@ -568,8 +573,9 @@ export function ClientTrainingPlanScreen({
       setHasSubmitted(false);
       setIsNameTouched(false);
       setTemplateOptions([]);
-      setIsTemplateListVisible(false);
+      setIsTemplatePickerVisible(false);
       setIsTemplateListLoading(false);
+      setTemplateSearchQuery('');
       setScreenState(resolveInteractiveState(nextDraft.name, nextDraft.days));
     } catch (error) {
       const statusCode = (error as ApiError).status;
@@ -1065,14 +1071,24 @@ export function ClientTrainingPlanScreen({
     }
   }, [exerciseOptions, screenState, updateDraft]);
 
-  const loadTemplateOptions = useCallback(async () => {
+  const loadTemplateOptions = useCallback(async (query: string) => {
+    const requestId = templateSearchRequestIdRef.current + 1;
+    templateSearchRequestIdRef.current = requestId;
     setIsTemplateListLoading(true);
 
     try {
-      const loadedTemplateOptions = await fetchPlanTemplatesList();
+      const loadedTemplateOptions = await fetchPlanTemplatesList(query);
+      if (templateSearchRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setTemplateOptions(loadedTemplateOptions);
       setBannerState(null);
     } catch (error) {
+      if (templateSearchRequestIdRef.current !== requestId) {
+        return;
+      }
+
       if (isOfflineError(error)) {
         setScreenState('offline');
         setBannerState({
@@ -1086,7 +1102,9 @@ export function ClientTrainingPlanScreen({
         });
       }
     } finally {
-      setIsTemplateListLoading(false);
+      if (templateSearchRequestIdRef.current === requestId) {
+        setIsTemplateListLoading(false);
+      }
     }
   }, []);
 
@@ -1102,7 +1120,7 @@ export function ClientTrainingPlanScreen({
       );
 
       const copySelectedTemplate = () => {
-        setIsTemplateListVisible(false);
+        setIsTemplatePickerVisible(false);
         executeCopyFromTemplate(templateId).catch(() => undefined);
       };
 
@@ -1135,14 +1153,19 @@ export function ClientTrainingPlanScreen({
       return;
     }
 
-    if (isTemplateListVisible) {
-      setIsTemplateListVisible(false);
-      return;
-    }
+    setTemplateSearchQuery('');
+    setTemplateOptions([]);
+    setIsTemplatePickerVisible(true);
+    loadTemplateOptions('').catch(() => undefined);
+  }, [isCopyDisabled, loadTemplateOptions]);
 
-    setIsTemplateListVisible(true);
-    loadTemplateOptions().catch(() => undefined);
-  }, [isCopyDisabled, isTemplateListVisible, loadTemplateOptions]);
+  const handleTemplateSearchChange = useCallback(
+    (query: string) => {
+      setTemplateSearchQuery(query);
+      loadTemplateOptions(query).catch(() => undefined);
+    },
+    [loadTemplateOptions],
+  );
 
   const handleSubmitUpdate = useCallback(async () => {
     if (draftRef.current.isSaving || draftRef.current.isCopying) {
@@ -1271,13 +1294,7 @@ export function ClientTrainingPlanScreen({
   const visibleNameError =
     hasSubmitted || isNameTouched ? validation.errors.name : undefined;
   const visibleDaysError = hasSubmitted ? validation.errors.days : undefined;
-  const copyButtonLabel = draft.isCopying
-    ? 'Copying...'
-    : isTemplateListLoading
-      ? 'Loading templates...'
-      : isTemplateListVisible
-        ? 'Hide templates'
-        : 'Copy from template';
+  const copyButtonLabel = draft.isCopying ? 'Copying...' : 'Copy from template';
 
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
@@ -1354,44 +1371,6 @@ export function ClientTrainingPlanScreen({
                       <ActivityIndicator color="#1D4ED8" size="small" />
                     ) : null}
                   </Pressable>
-
-                  {isTemplateListVisible ? (
-                    <View style={styles.templatePicker} testID="list.clients.trainingPlan.templates">
-                      {isTemplateListLoading ? (
-                        <View style={styles.templatePickerLoadingRow}>
-                          <ActivityIndicator color="#1D4ED8" size="small" />
-                        </View>
-                      ) : null}
-
-                      {!isTemplateListLoading && templateOptions.length === 0 ? (
-                        <Text
-                          style={styles.templatePickerEmptyText}
-                          testID="text.clients.trainingPlan.template.empty">
-                          {TEMPLATE_PICKER_EMPTY_MESSAGE}
-                        </Text>
-                      ) : null}
-
-                      {!isTemplateListLoading
-                        ? templateOptions.map((template, index) => (
-                            <Pressable
-                              key={template.id}
-                              testID={`button.clients.trainingPlan.template.option.${index}`}
-                              accessibilityRole="button"
-                              onPress={() => {
-                                handleSelectTemplate(template.id);
-                              }}
-                              style={({ pressed }) => [
-                                styles.templatePickerOptionButton,
-                                pressed && styles.templatePickerOptionButtonPressed,
-                              ]}>
-                              <Text style={styles.templatePickerOptionText}>
-                                {template.name.length > 0 ? template.name : `Template ${index + 1}`}
-                              </Text>
-                            </Pressable>
-                          ))
-                        : null}
-                    </View>
-                  ) : null}
                 </View>
 
                 <View style={styles.section}>
@@ -1564,6 +1543,34 @@ export function ClientTrainingPlanScreen({
           onNavigate={handleBottomNavigation}
         />
       </View>
+
+      <SearchableSelectModal
+        visible={isTemplatePickerVisible}
+        title="Select template"
+        options={templateOptions}
+        isLoading={isTemplateListLoading}
+        emptyMessage={TEMPLATE_PICKER_EMPTY_MESSAGE}
+        searchValue={templateSearchQuery}
+        searchPlaceholder="Search template"
+        searchAccessibilityLabel="Plan template search"
+        getOptionLabel={(template, index) =>
+          template.name.length > 0 ? template.name : `Template ${index + 1}`
+        }
+        onSearchChange={handleTemplateSearchChange}
+        onSelectOption={template => {
+          handleSelectTemplate(template.id);
+        }}
+        onRequestClose={() => setIsTemplatePickerVisible(false)}
+        getOptionTestID={(_, index) =>
+          `button.clients.trainingPlan.template.option.${index}`
+        }
+        closeButtonTestID="button.clients.trainingPlan.template.close"
+        searchInputTestID="input.clients.trainingPlan.template.search"
+        clearSearchButtonTestID="button.clients.trainingPlan.template.search.clear"
+        listTestID="list.clients.trainingPlan.templates"
+        loadingTestID="loading.clients.trainingPlan.templates"
+        emptyTextTestID="text.clients.trainingPlan.template.empty"
+      />
     </SafeAreaView>
   );
 }
@@ -1632,37 +1639,6 @@ const styles = StyleSheet.create({
     color: '#1D4ED8',
     fontSize: 15,
     fontWeight: '700',
-  },
-  templatePicker: {
-    gap: 8,
-  },
-  templatePickerLoadingRow: {
-    minHeight: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  templatePickerEmptyText: {
-    color: '#64748B',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  templatePickerOptionButton: {
-    minHeight: 40,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  templatePickerOptionButtonPressed: {
-    backgroundColor: '#EFF6FF',
-  },
-  templatePickerOptionText: {
-    color: '#0F172A',
-    fontSize: 14,
-    fontWeight: '600',
   },
   fieldLabel: {
     fontSize: 14,

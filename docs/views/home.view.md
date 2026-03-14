@@ -12,7 +12,7 @@ description: Daily training overview with quick actions to start or add a traini
 
 ## Purpose
 
-Provide trainers with immediate visibility of the next scheduled training and today training plan, with one-tap actions to start or add a training.
+Provide trainers with immediate visibility of the next scheduled training and today trainings list, with one-tap actions to start or add a training.
 
 ## User
 
@@ -23,7 +23,7 @@ Authenticated trainer opening the app to manage the current day schedule.
 - See the next training at a glance.
 - Start the next training quickly when allowed.
 - Review all trainings planned for today.
-- Add a new training from the Today Training section header.
+- Add a new training from the Today Trainings section header.
 
 ## Sections
 
@@ -55,13 +55,13 @@ Authenticated trainer opening the app to manage the current day schedule.
   - If next training becomes invalid during request (canceled or started by another device), show error message and refresh.
 - Empty State: Button remains disabled.
 
-### 3. Today Training
+### 3. Today Trainings
 
 - Purpose: Display today full training list and progress.
 - Fields/Data Shown: `startTime`, `name`, `status` (`planned | finished | canceled | started`).
 - Components:
   - Section header row with:
-    - Title `Today Training` (`85%` width).
+    - Title `Today Trainings` (`85%` width).
     - Compact add action button `+` (`15%` width), matching shared app-shell add-action rules.
   - Vertical list rows (`10:00 Anna Nowak Finished`), status badge/text.
 - Behavior:

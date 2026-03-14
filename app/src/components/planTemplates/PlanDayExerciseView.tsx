@@ -1,6 +1,12 @@
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ExerciseSetView } from './ExerciseSetView';
+import { SearchableSelectModal } from '../shared/SearchableSelectModal';
 import {
   ExerciseOption,
   PlanDayExerciseDraft,
@@ -56,19 +62,24 @@ export function PlanDayExerciseView({
   onRemoveSet,
   onChangeSetRepeats,
 }: PlanDayExerciseViewProps) {
-  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+  const [isPickerVisible, setIsPickerVisible] = useState(false);
 
   const visibleOptions = useMemo(() => {
     const normalizedQuery = normalizeSearchValue(value.exerciseSearchQuery);
 
     if (!normalizedQuery) {
-      return exerciseOptions.slice(0, 8);
+      return exerciseOptions;
     }
 
-    return exerciseOptions
-      .filter(option => normalizeSearchValue(option.name).includes(normalizedQuery))
-      .slice(0, 8);
+    return exerciseOptions.filter(option =>
+      normalizeSearchValue(option.name).includes(normalizedQuery),
+    );
   }, [exerciseOptions, value.exerciseSearchQuery]);
+
+  const selectedExerciseLabel =
+    value.exerciseId.trim().length > 0 && value.exerciseName.trim().length > 0
+      ? value.exerciseName
+      : 'Select exercise';
 
   return (
     <View
@@ -121,26 +132,27 @@ export function PlanDayExerciseView({
         </View>
       </View>
       <View style={styles.searchInputRow}>
-        <TextInput
+        <Pressable
           testID={`input.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.search`}
-          accessibilityLabel={`Search exercise for row ${exerciseIndex + 1}`}
-          autoCapitalize="words"
-          autoCorrect={false}
-          editable={!disabled}
-          onFocus={() => {
-            setIsOptionsVisible(true);
+          accessibilityRole="button"
+          accessibilityLabel={`Select exercise for row ${exerciseIndex + 1}`}
+          disabled={disabled}
+          onPress={() => {
+            setIsPickerVisible(true);
           }}
-          onPressIn={() => {
-            setIsOptionsVisible(true);
-          }}
-          onChangeText={query => {
-            onSearchChange(query);
-            setIsOptionsVisible(true);
-          }}
-          placeholder="Search exercises"
-          style={styles.searchInput}
-          value={value.exerciseSearchQuery}
-        />
+          style={({ pressed }) => [
+            styles.searchInputButton,
+            disabled && styles.buttonDisabled,
+            pressed && !disabled && styles.searchInputButtonPressed,
+          ]}>
+          <Text
+            style={[
+              styles.searchInputValueText,
+              value.exerciseId.trim().length === 0 && styles.searchInputPlaceholderText,
+            ]}>
+            {selectedExerciseLabel}
+          </Text>
+        </Pressable>
 
         <Pressable
           testID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.selection.clear`}
@@ -149,7 +161,7 @@ export function PlanDayExerciseView({
           disabled={disabled || !value.exerciseId}
           onPress={() => {
             onSelectExercise({ id: '', name: '' });
-            setIsOptionsVisible(false);
+            setIsPickerVisible(false);
           }}
           style={({ pressed }) => [
             styles.clearSelectionButton,
@@ -165,39 +177,6 @@ export function PlanDayExerciseView({
           </Text>
         </Pressable>
       </View>
-
-      {isOptionsVisible ? (
-        visibleOptions.length > 0 ? (
-          <View style={styles.optionsList}>
-            {visibleOptions.map(option => {
-              const isSelected = option.id === value.exerciseId;
-
-              return (
-                <Pressable
-                  key={option.id}
-                  testID={`item.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.option.${option.id}`}
-                  accessibilityRole="button"
-                  disabled={disabled}
-                  onPress={() => {
-                    onSelectExercise(option);
-                    setIsOptionsVisible(false);
-                  }}
-                  style={({ pressed }) => [
-                    styles.optionRow,
-                    isSelected && styles.optionRowSelected,
-                    pressed && !disabled && styles.optionRowPressed,
-                  ]}>
-                  <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
-                    {option.name}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : (
-          <Text style={styles.emptyOptionsText}>No exercises found.</Text>
-        )
-      ) : null}
 
       {errors?.exerciseId ? (
         <Text style={styles.errorText}>{errors.exerciseId}</Text>
@@ -243,6 +222,33 @@ export function PlanDayExerciseView({
           </Pressable>
         </View>
       </View>
+
+      <SearchableSelectModal
+        visible={isPickerVisible}
+        title="Select exercise"
+        options={visibleOptions}
+        disabled={disabled}
+        isLoading={false}
+        selectedOptionId={value.exerciseId}
+        emptyMessage="No exercises found."
+        searchValue={value.exerciseSearchQuery}
+        searchPlaceholder="Search exercises"
+        searchAccessibilityLabel={`Search exercise options for row ${exerciseIndex + 1}`}
+        getOptionLabel={option => option.name}
+        onSearchChange={onSearchChange}
+        onSelectOption={option => {
+          onSelectExercise(option);
+          setIsPickerVisible(false);
+        }}
+        onRequestClose={() => setIsPickerVisible(false)}
+        getOptionTestID={option =>
+          `item.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.option.${option.id}`
+        }
+        closeButtonTestID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.search.close`}
+        searchInputTestID={`input.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.search.query`}
+        clearSearchButtonTestID={`button.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.search.clear`}
+        listTestID={`list.${testIdPrefix}.day.${dayIndex}.exercise.${exerciseIndex}.options`}
+      />
     </View>
   );
 }
@@ -319,13 +325,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     overflow: 'hidden',
   },
-  searchInput: {
+  searchInputButton: {
     flex: 1,
     minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  searchInputButtonPressed: {
+    backgroundColor: '#F8FAFC',
+  },
+  searchInputValueText: {
     fontSize: 16,
     color: '#111827',
+  },
+  searchInputPlaceholderText: {
+    color: '#9CA3AF',
   },
   clearSelectionButton: {
     minHeight: 44,
@@ -348,39 +363,6 @@ const styles = StyleSheet.create({
   },
   clearSelectionTextDisabled: {
     color: '#CBD5E1',
-  },
-  optionsList: {
-    gap: 6,
-  },
-  optionRow: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
-    minHeight: 40,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  optionRowSelected: {
-    borderColor: '#60A5FA',
-    backgroundColor: '#EFF6FF',
-  },
-  optionRowPressed: {
-    backgroundColor: '#EEF2FF',
-  },
-  optionText: {
-    fontSize: 14,
-    color: '#1E293B',
-    fontWeight: '500',
-  },
-  optionTextSelected: {
-    color: '#1D4ED8',
-    fontWeight: '700',
-  },
-  emptyOptionsText: {
-    fontSize: 13,
-    color: '#64748B',
   },
   errorText: {
     color: '#B91C1C',
