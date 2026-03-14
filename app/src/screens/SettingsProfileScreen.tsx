@@ -21,6 +21,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type ProfileViewState =
   | 'default'
@@ -93,7 +94,7 @@ interface ApiError extends Error {
   status?: number;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
 const PHOTO_RULE_MESSAGE = 'Use JPG, PNG, or WEBP up to 5 MB.';
 const LOAD_PROFILE_ERROR_MESSAGE = 'Could not load profile. Pull to refresh and try again.';

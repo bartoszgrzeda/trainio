@@ -15,6 +15,7 @@ public sealed record PlanTemplateDayCommand(
 
 public sealed record PlanTemplateDayExerciseCommand(
     Guid ExerciseId,
+    int Order,
     IReadOnlyList<PlanTemplateExerciseSetCommand> Series);
 
 public sealed record PlanTemplateExerciseSetCommand(int RepeatsCount);
@@ -30,6 +31,7 @@ public sealed record PlanTemplateDayDto(
 
 public sealed record PlanTemplateDayExerciseDto(
     Guid ExerciseId,
+    int Order,
     IReadOnlyList<PlanTemplateExerciseSetDto> Series);
 
 public sealed record PlanTemplateExerciseSetDto(int RepeatsCount);

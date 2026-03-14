@@ -24,6 +24,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type ClientGender = 'male' | 'female';
 
@@ -92,7 +93,7 @@ interface ApiErrorResponse {
   message?: string;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const SUPPORTED_GENDERS: ClientGender[] = ['male', 'female'];
 const PHONE_ALLOWED_REGEX = /^[0-9+\-(). ]+$/;
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;

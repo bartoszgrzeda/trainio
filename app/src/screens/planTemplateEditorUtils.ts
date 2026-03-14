@@ -15,6 +15,7 @@ export interface PlanTemplateExerciseSetRequest {
 
 export interface PlanTemplateDayExerciseRequest {
   exerciseId: string;
+  order: number;
   series: PlanTemplateExerciseSetRequest[];
 }
 
@@ -35,6 +36,7 @@ export interface PlanTemplateExerciseSetResponse {
 
 export interface PlanTemplateDayExerciseResponse {
   exerciseId: string;
+  order: number;
   series: PlanTemplateExerciseSetResponse[];
 }
 
@@ -293,8 +295,9 @@ export function buildMutationPayload(
     name: normalizeName(name),
     days: days.map(day => ({
       name: normalizeName(day.name),
-      exercises: day.exercises.map(exercise => ({
+      exercises: day.exercises.map((exercise, exerciseIndex) => ({
         exerciseId: exercise.exerciseId,
+        order: exerciseIndex,
         series: exercise.series.map(setItem => ({
           repeatsCount: Number.parseInt(setItem.repeatsCount.trim(), 10),
         })),
@@ -327,7 +330,24 @@ export function mapResponseToDraft(
   const exerciseNameLookup = new Map(exerciseOptions.map(item => [item.id, item.name]));
 
   const mappedDays = response.days.map((day, dayIndex) => {
-    const mappedExercises = day.exercises.map(exercise => {
+    const orderedExercises = day.exercises
+      .map((exercise, exerciseIndex) => ({ exercise, exerciseIndex }))
+      .sort((left, right) => {
+        const leftOrder = Number.isFinite(left.exercise.order)
+          ? left.exercise.order
+          : left.exerciseIndex;
+        const rightOrder = Number.isFinite(right.exercise.order)
+          ? right.exercise.order
+          : right.exerciseIndex;
+
+        if (leftOrder !== rightOrder) {
+          return leftOrder - rightOrder;
+        }
+
+        return left.exerciseIndex - right.exerciseIndex;
+      });
+
+    const mappedExercises = orderedExercises.map(({ exercise }) => {
       const resolvedExerciseName =
         exerciseNameLookup.get(exercise.exerciseId) ?? 'Unknown exercise';
 

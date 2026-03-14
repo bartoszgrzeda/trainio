@@ -18,6 +18,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type ClientListViewState = 'loading' | 'default' | 'empty' | 'error' | 'offline';
 
@@ -39,7 +40,7 @@ interface ClientListScreenProps {
   activeTrainingId?: string | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const LOAD_ERROR_MESSAGE = 'Could not load clients. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 const SEARCH_PLACEHOLDER = 'Search clients';

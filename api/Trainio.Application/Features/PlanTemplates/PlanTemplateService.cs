@@ -107,9 +107,16 @@ public sealed class PlanTemplateService : IPlanTemplateService
         return days
             .Select(day => PlanDay.From(
                 PlanDayName.From(day.Name),
-                day.Exercises.Select(exercise => PlanDayExercise.From(
-                    EntityId.From(exercise.ExerciseId),
-                    exercise.Series.Select(set => ExerciseSet.From(RepeatsCount.From(set.RepeatsCount))).ToArray()))
+                day.Exercises
+                    .Select((exercise, index) => new { Exercise = exercise, Index = index })
+                    .OrderBy(item => item.Exercise.Order)
+                    .ThenBy(item => item.Index)
+                    .Select(item => PlanDayExercise.From(
+                        EntityId.From(item.Exercise.ExerciseId),
+                        item.Exercise.Order,
+                        item.Exercise.Series
+                            .Select(set => ExerciseSet.From(RepeatsCount.From(set.RepeatsCount)))
+                            .ToArray()))
                 .ToArray()))
             .ToArray();
     }
@@ -122,10 +129,17 @@ public sealed class PlanTemplateService : IPlanTemplateService
             planTemplate.Days
                 .Select(day => new PlanTemplateDayDto(
                     day.Name.Value,
-                    day.Exercises.Select(exercise => new PlanTemplateDayExerciseDto(
-                        exercise.ExerciseId.Value,
-                        exercise.Series.Select(set => new PlanTemplateExerciseSetDto(set.RepeatsCount.Value)).ToArray()))
-                    .ToArray()))
+                    day.Exercises
+                        .Select((exercise, index) => new { Exercise = exercise, Index = index })
+                        .OrderBy(item => item.Exercise.Order)
+                        .ThenBy(item => item.Index)
+                        .Select(item => new PlanTemplateDayExerciseDto(
+                            item.Exercise.ExerciseId.Value,
+                            item.Exercise.Order,
+                            item.Exercise.Series
+                                .Select(set => new PlanTemplateExerciseSetDto(set.RepeatsCount.Value))
+                                .ToArray()))
+                        .ToArray()))
                 .ToArray());
     }
 }

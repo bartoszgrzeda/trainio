@@ -18,6 +18,7 @@ import {
 } from '../components/shell/BottomMenu';
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type ExerciseNewViewState =
   | 'default'
@@ -73,7 +74,7 @@ interface ExerciseNewScreenProps {
   activeTrainingId?: string | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 
 const NAME_PLACEHOLDER = 'Enter exercise name';
 const NAME_REQUIRED_MESSAGE = 'Exercise name is required.';

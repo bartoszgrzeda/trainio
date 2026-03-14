@@ -27,8 +27,18 @@ export function ExerciseSetView({
 }: ExerciseSetViewProps) {
   return (
     <View style={styles.container} testID={`section.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}`}>
-      <View style={styles.headerRow}>
-        <Text style={styles.setLabel}>{`Set ${setIndex + 1}`}</Text>
+      <Text style={styles.fieldLabel}>Repeats</Text>
+      <View style={styles.inputRow}>
+        <TextInput
+          testID={`input.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.repeats`}
+          accessibilityLabel={`Set ${setIndex + 1} repeats`}
+          editable={!disabled}
+          keyboardType="number-pad"
+          onChangeText={onChangeRepeatsCount}
+          placeholder="Enter repeats"
+          style={styles.input}
+          value={value.repeatsCount}
+        />
 
         <Pressable
           testID={`button.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.remove`}
@@ -44,18 +54,6 @@ export function ExerciseSetView({
           <Text style={styles.removeButtonText}>X</Text>
         </Pressable>
       </View>
-
-      <Text style={styles.fieldLabel}>Repeats</Text>
-      <TextInput
-        testID={`input.planTemplates.day.${dayIndex}.exercise.${exerciseIndex}.set.${setIndex}.repeats`}
-        accessibilityLabel={`Set ${setIndex + 1} repeats`}
-        editable={!disabled}
-        keyboardType="number-pad"
-        onChangeText={onChangeRepeatsCount}
-        placeholder="Enter repeats"
-        style={styles.input}
-        value={value.repeatsCount}
-      />
 
       {errors?.repeatsCount ? (
         <Text style={styles.errorText}>{errors.repeatsCount}</Text>
@@ -73,15 +71,10 @@ const styles = StyleSheet.create({
     padding: 10,
     gap: 8,
   },
-  headerRow: {
+  inputRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  setLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0F172A',
+    gap: 8,
   },
   removeButton: {
     minHeight: 36,
@@ -110,6 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
+    flex: 1,
     minHeight: 44,
     borderRadius: 12,
     borderWidth: 1,

@@ -16,6 +16,7 @@ import {
 } from '../components/shell/BottomMenu';
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type SettingsViewState =
   | 'default'
@@ -53,7 +54,7 @@ interface BannerState {
   message: string;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const SIGN_OUT_ERROR_MESSAGE = 'Could not sign out. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 const OFFLINE_SIGN_OUT_MESSAGE =

@@ -17,6 +17,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type TrainingStatus = 'planned' | 'finished' | 'canceled' | 'started';
 
@@ -62,7 +63,7 @@ const STATUS_LABELS: Record<TrainingStatus, string> = {
   started: 'Started',
 };
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const LOAD_ERROR_MESSAGE = 'Could not load trainings. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 

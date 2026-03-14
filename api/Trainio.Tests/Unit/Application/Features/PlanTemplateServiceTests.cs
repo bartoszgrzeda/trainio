@@ -29,6 +29,7 @@ public sealed class PlanTemplateServiceTests
                             [
                                 new PlanTemplateDayExerciseCommand(
                                     Guid.NewGuid(),
+                                    0,
                                     [
                                         new PlanTemplateExerciseSetCommand(8),
                                         new PlanTemplateExerciseSetCommand(10),
@@ -46,6 +47,7 @@ public sealed class PlanTemplateServiceTests
         planTemplates[0].Days.Should().HaveCount(1);
         planTemplates[0].Days[0].Name.Value.Should().Be("Day 1");
         planTemplates[0].Days[0].Exercises.Should().HaveCount(1);
+        planTemplates[0].Days[0].Exercises[0].Order.Should().Be(0);
         planTemplates[0].Days[0].Exercises[0].Series.Select(set => set.RepeatsCount.Value).Should().Equal(8, 10);
     }
 
@@ -66,6 +68,49 @@ public sealed class PlanTemplateServiceTests
         var listed = await service.ListAsync("split", CancellationToken.None);
 
         listed.Select(item => item.Name).Should().Equal("Alpha Split", "Zeta Split");
+    }
+
+    [Fact]
+    public async Task CreateAsync_ShouldStoreExercisesSortedByOrder()
+    {
+        var databaseName = Guid.NewGuid().ToString();
+        var root = new InMemoryDatabaseRoot();
+        var options = TestDbContextFactory.CreateOptions(databaseName, root);
+
+        var firstExerciseId = Guid.NewGuid();
+        var secondExerciseId = Guid.NewGuid();
+
+        using (var context = new TrainioDbContext(options))
+        {
+            var service = new PlanTemplateService(new RepositoryFactory(context), new UnitOfWork(context));
+
+            await service.CreateAsync(
+                new CreatePlanTemplateCommand(
+                    "Ordered Template",
+                    [
+                        new PlanTemplateDayCommand(
+                            "Day 1",
+                            [
+                                new PlanTemplateDayExerciseCommand(
+                                    firstExerciseId,
+                                    1,
+                                    [new PlanTemplateExerciseSetCommand(8)]),
+                                new PlanTemplateDayExerciseCommand(
+                                    secondExerciseId,
+                                    0,
+                                    [new PlanTemplateExerciseSetCommand(10)]),
+                            ]),
+                    ]),
+                CancellationToken.None);
+        }
+
+        using var verificationContext = new TrainioDbContext(options);
+        var stored = await verificationContext.PlanTemplates.AsNoTracking().SingleAsync();
+
+        stored.Days[0].Exercises.Select(exercise => exercise.Order).Should().Equal(0, 1);
+        stored.Days[0].Exercises.Select(exercise => exercise.ExerciseId.Value)
+            .Should()
+            .Equal(secondExerciseId, firstExerciseId);
     }
 
     [Fact]
@@ -99,6 +144,7 @@ public sealed class PlanTemplateServiceTests
                 [
                     new PlanTemplateDayExerciseCommand(
                         Guid.NewGuid(),
+                        0,
                         [
                             new PlanTemplateExerciseSetCommand(10),
                         ]),

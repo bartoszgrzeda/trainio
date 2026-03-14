@@ -11,6 +11,9 @@ interface PlanDayViewProps {
   dayIndex: number;
   value: PlanDayDraft;
   errors?: PlanDayErrors;
+  topSlot?: React.ReactNode;
+  topSlotError?: string;
+  showDayHeader?: boolean;
   exerciseOptions: ExerciseOption[];
   disabled?: boolean;
   canRemoveDay: boolean;
@@ -18,6 +21,8 @@ interface PlanDayViewProps {
   onRemoveDay: () => void;
   onAddExercise: () => void;
   onRemoveExercise: (exerciseIndex: number) => void;
+  onMoveExerciseUp: (exerciseIndex: number) => void;
+  onMoveExerciseDown: (exerciseIndex: number) => void;
   onExerciseSearchChange: (exerciseIndex: number, query: string) => void;
   onSelectExercise: (exerciseIndex: number, exerciseId: string, exerciseName: string) => void;
   onAddSet: (exerciseIndex: number) => void;
@@ -29,6 +34,9 @@ export function PlanDayView({
   dayIndex,
   value,
   errors,
+  topSlot,
+  topSlotError,
+  showDayHeader = true,
   exerciseOptions,
   disabled = false,
   canRemoveDay,
@@ -36,6 +44,8 @@ export function PlanDayView({
   onRemoveDay,
   onAddExercise,
   onRemoveExercise,
+  onMoveExerciseUp,
+  onMoveExerciseDown,
   onExerciseSearchChange,
   onSelectExercise,
   onAddSet,
@@ -44,23 +54,32 @@ export function PlanDayView({
 }: PlanDayViewProps) {
   return (
     <View style={styles.container} testID={`section.planTemplates.day.${dayIndex}.editor`}>
-      <View style={styles.headerRow}>
-        <Text style={styles.dayTitle}>{`Day ${dayIndex + 1}`}</Text>
+      {topSlot ? (
+        <View style={styles.topSlotContainer}>
+          {topSlot}
+          {topSlotError ? <Text style={styles.errorText}>{topSlotError}</Text> : null}
+        </View>
+      ) : null}
 
-        <Pressable
-          testID={`button.planTemplates.day.${dayIndex}.remove`}
-          accessibilityRole="button"
-          accessibilityLabel={`Remove day ${dayIndex + 1}`}
-          disabled={disabled || !canRemoveDay}
-          onPress={onRemoveDay}
-          style={({ pressed }) => [
-            styles.removeDayButton,
-            (disabled || !canRemoveDay) && styles.buttonDisabled,
-            pressed && !(disabled || !canRemoveDay) && styles.removeDayButtonPressed,
-          ]}>
-          <Text style={styles.removeDayButtonText}>X</Text>
-        </Pressable>
-      </View>
+      {showDayHeader ? (
+        <View style={styles.headerRow}>
+          <Text style={styles.dayTitle}>{`Day ${dayIndex + 1}`}</Text>
+
+          <Pressable
+            testID={`button.planTemplates.day.${dayIndex}.remove`}
+            accessibilityRole="button"
+            accessibilityLabel={`Remove day ${dayIndex + 1}`}
+            disabled={disabled || !canRemoveDay}
+            onPress={onRemoveDay}
+            style={({ pressed }) => [
+              styles.removeDayButton,
+              (disabled || !canRemoveDay) && styles.buttonDisabled,
+              pressed && !(disabled || !canRemoveDay) && styles.removeDayButtonPressed,
+            ]}>
+            <Text style={styles.removeDayButtonText}>X</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <Text style={styles.fieldLabel}>Day name</Text>
       <TextInput
@@ -108,6 +127,8 @@ export function PlanDayView({
             exerciseOptions={exerciseOptions}
             disabled={disabled}
             canRemoveExercise={value.exercises.length > 1}
+            canMoveUp={exerciseIndex > 0}
+            canMoveDown={exerciseIndex < value.exercises.length - 1}
             onSearchChange={query => {
               onExerciseSearchChange(exerciseIndex, query);
             }}
@@ -116,6 +137,12 @@ export function PlanDayView({
             }}
             onRemoveExercise={() => {
               onRemoveExercise(exerciseIndex);
+            }}
+            onMoveUp={() => {
+              onMoveExerciseUp(exerciseIndex);
+            }}
+            onMoveDown={() => {
+              onMoveExerciseDown(exerciseIndex);
             }}
             onAddSet={() => {
               onAddSet(exerciseIndex);
@@ -144,6 +171,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 1,
+  },
+  topSlotContainer: {
+    gap: 10,
   },
   headerRow: {
     flexDirection: 'row',

@@ -19,6 +19,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 import { PlanDayView } from '../components/planTemplates/PlanDayView';
 import { ExerciseOption, PlanDayDraft } from '../components/planTemplates/types';
 import {
@@ -79,7 +80,7 @@ interface PlanTemplateScreenProps {
   planTemplateId: string;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 
 const OFFLINE_MESSAGE = 'No internet connection';
 const PLAN_TEMPLATE_NOT_FOUND_MESSAGE = 'Plan template not found.';
@@ -291,13 +292,9 @@ export function PlanTemplateScreen({
     () => buildComparableSnapshot(draft.name, draft.days),
     [draft.days, draft.name],
   );
-  const isDirty = useMemo(() => {
-    if (originalSnapshotRef.current == null) {
-      return false;
-    }
-
-    return originalSnapshotRef.current !== currentSnapshot;
-  }, [currentSnapshot]);
+  const isDirty =
+    originalSnapshotRef.current != null &&
+    originalSnapshotRef.current !== currentSnapshot;
 
   useEffect(() => {
     isDirtyRef.current = isDirty;
@@ -366,6 +363,7 @@ export function PlanTemplateScreen({
         nextDraft.name,
         nextDraft.days,
       );
+      isDirtyRef.current = false;
 
       setBannerState(null);
       setHasLoadedTemplate(true);
@@ -584,6 +582,38 @@ export function PlanTemplateScreen({
     [updateDraft],
   );
 
+  const handleMoveExercise = useCallback(
+    (dayIndex: number, exerciseIndex: number, direction: 'up' | 'down') => {
+      updateDraft(current => {
+        const day = current.days[dayIndex];
+        if (!day || day.exercises.length <= 1) {
+          return current;
+        }
+
+        const targetIndex =
+          direction === 'up' ? exerciseIndex - 1 : exerciseIndex + 1;
+
+        if (targetIndex < 0 || targetIndex >= day.exercises.length) {
+          return current;
+        }
+
+        const nextDays = [...current.days];
+        const nextDay = cloneDay(day);
+        const nextExercises = [...nextDay.exercises];
+        const [movedExercise] = nextExercises.splice(exerciseIndex, 1);
+        nextExercises.splice(targetIndex, 0, movedExercise);
+        nextDay.exercises = nextExercises;
+        nextDays[dayIndex] = nextDay;
+
+        return {
+          ...current,
+          days: nextDays,
+        };
+      });
+    },
+    [updateDraft],
+  );
+
   const handleExerciseSearchChange = useCallback(
     (dayIndex: number, exerciseIndex: number, query: string) => {
       updateDraft(current => {
@@ -779,6 +809,7 @@ export function PlanTemplateScreen({
         nextDraft.name,
         nextDraft.days,
       );
+      isDirtyRef.current = false;
 
       setScreenState('default');
       setBannerState(null);
@@ -1051,6 +1082,12 @@ export function PlanTemplateScreen({
                     }}
                     onRemoveExercise={exerciseIndex => {
                       handleRemoveExercise(draft.activeDayIndex, exerciseIndex);
+                    }}
+                    onMoveExerciseUp={exerciseIndex => {
+                      handleMoveExercise(draft.activeDayIndex, exerciseIndex, 'up');
+                    }}
+                    onMoveExerciseDown={exerciseIndex => {
+                      handleMoveExercise(draft.activeDayIndex, exerciseIndex, 'down');
                     }}
                     onExerciseSearchChange={(exerciseIndex, query) => {
                       handleExerciseSearchChange(

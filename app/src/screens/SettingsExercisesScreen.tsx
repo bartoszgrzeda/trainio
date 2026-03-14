@@ -18,6 +18,7 @@ import {
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { LoadingSkeleton } from '../components/shell/LoadingSkeleton';
 import { StatusBanner } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 
 type ExercisesViewState = 'default' | 'loading' | 'empty' | 'error' | 'offline';
 
@@ -47,7 +48,7 @@ interface SettingsExercisesScreenProps {
   activeTrainingId?: string | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 const LOAD_EXERCISES_ERROR_MESSAGE = 'Could not load exercises. Try again.';
 const OFFLINE_MESSAGE = 'No internet connection';
 const NO_EXERCISES_MESSAGE = 'No exercises yet. Add your first exercise.';

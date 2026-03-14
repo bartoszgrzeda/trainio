@@ -18,6 +18,7 @@ import {
 } from '../components/shell/BottomMenu';
 import { GlobalHeader } from '../components/shell/GlobalHeader';
 import { StatusBanner, StatusBannerTone } from '../components/shell/StatusBanner';
+import { getApiBaseUrl } from '../config/api';
 import { PlanDayView } from '../components/planTemplates/PlanDayView';
 import { ExerciseOption, PlanDayDraft } from '../components/planTemplates/types';
 import {
@@ -74,7 +75,7 @@ interface PlanTemplateNewScreenProps {
   activeTrainingId?: string | null;
 }
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = getApiBaseUrl();
 
 const OFFLINE_MESSAGE = 'No internet connection';
 const LOAD_EXERCISES_ERROR_MESSAGE = 'Could not load exercises list. Try again.';
@@ -472,6 +473,39 @@ export function PlanTemplateNewScreen({
     [updateDraft],
   );
 
+  const handleMoveExercise = useCallback(
+    (dayIndex: number, exerciseIndex: number, direction: 'up' | 'down') => {
+      updateDraft(current => {
+        const day = current.days[dayIndex];
+        if (!day || day.exercises.length <= 1) {
+          return current;
+        }
+
+        const targetIndex =
+          direction === 'up' ? exerciseIndex - 1 : exerciseIndex + 1;
+
+        if (targetIndex < 0 || targetIndex >= day.exercises.length) {
+          return current;
+        }
+
+        const nextDays = [...current.days];
+        const nextDay = cloneDay(day);
+        const nextExercises = [...nextDay.exercises];
+        const [movedExercise] = nextExercises.splice(exerciseIndex, 1);
+        nextExercises.splice(targetIndex, 0, movedExercise);
+        nextDay.exercises = nextExercises;
+        nextDays[dayIndex] = nextDay;
+
+        return {
+          ...current,
+          days: nextDays,
+          isDirty: true,
+        };
+      });
+    },
+    [updateDraft],
+  );
+
   const handleExerciseSearchChange = useCallback(
     (dayIndex: number, exerciseIndex: number, query: string) => {
       updateDraft(current => {
@@ -749,55 +783,6 @@ export function PlanTemplateNewScreen({
               ) : null}
             </View>
 
-            <View style={styles.section}>
-              <View style={styles.dayTabsHeaderRow}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.dayTabsContainer}>
-                  {draft.days.map((day, dayIndex) => {
-                    const isActive = dayIndex === draft.activeDayIndex;
-
-                    return (
-                      <Pressable
-                        key={day.id}
-                        testID={`tab.planTemplates.day.${dayIndex}`}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Open ${resolveDayLabel(day, dayIndex)} tab`}
-                        onPress={() => {
-                          handleSelectDayTab(dayIndex);
-                        }}
-                        style={({ pressed }) => [
-                          styles.dayTab,
-                          isActive && styles.dayTabActive,
-                          pressed && styles.dayTabPressed,
-                        ]}>
-                        <Text style={[styles.dayTabText, isActive && styles.dayTabTextActive]}>
-                          {resolveDayLabel(day, dayIndex)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-
-                <Pressable
-                  testID="button.planTemplates.day.add"
-                  accessibilityRole="button"
-                  accessibilityLabel="Add plan day"
-                  disabled={draft.isSaving}
-                  onPress={handleAddDay}
-                  style={({ pressed }) => [
-                    styles.addDayButton,
-                    draft.isSaving && styles.buttonDisabled,
-                    pressed && !draft.isSaving && styles.addDayButtonPressed,
-                  ]}>
-                  <Text style={styles.addDayButtonText}>+</Text>
-                </Pressable>
-              </View>
-
-              {visibleDaysError ? <Text style={styles.fieldErrorText}>{visibleDaysError}</Text> : null}
-            </View>
-
             {isInitializing && exerciseOptions.length === 0 ? (
               <View style={styles.loadingSection}>
                 <ActivityIndicator color="#1D4ED8" size="small" />
@@ -810,6 +795,74 @@ export function PlanTemplateNewScreen({
                 dayIndex={draft.activeDayIndex}
                 value={activeDay}
                 errors={activeDayErrors}
+                topSlot={
+                  <View style={styles.dayTabsHeaderRow}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.dayTabsContainer}>
+                      {draft.days.map((day, dayIndex) => {
+                        const isActive = dayIndex === draft.activeDayIndex;
+
+                        return (
+                          <Pressable
+                            key={day.id}
+                            testID={`tab.planTemplates.day.${dayIndex}`}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Open ${resolveDayLabel(day, dayIndex)} tab`}
+                            onPress={() => {
+                              handleSelectDayTab(dayIndex);
+                            }}
+                            style={({ pressed }) => [
+                              styles.dayTab,
+                              isActive && styles.dayTabActive,
+                              pressed && styles.dayTabPressed,
+                            ]}>
+                            <Text style={[styles.dayTabText, isActive && styles.dayTabTextActive]}>
+                              {resolveDayLabel(day, dayIndex)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+
+                    <View style={styles.dayActionsRow}>
+                      <Pressable
+                        testID="button.planTemplates.day.add"
+                        accessibilityRole="button"
+                        accessibilityLabel="Add plan day"
+                        disabled={draft.isSaving}
+                        onPress={handleAddDay}
+                        style={({ pressed }) => [
+                          styles.addDayButton,
+                          draft.isSaving && styles.buttonDisabled,
+                          pressed && !draft.isSaving && styles.addDayButtonPressed,
+                        ]}>
+                        <Text style={styles.addDayButtonText}>+</Text>
+                      </Pressable>
+
+                      <Pressable
+                        testID={`button.planTemplates.day.${draft.activeDayIndex}.remove`}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove day ${draft.activeDayIndex + 1}`}
+                        disabled={draft.isSaving || draft.days.length <= 1}
+                        onPress={() => {
+                          handleRemoveDay(draft.activeDayIndex);
+                        }}
+                        style={({ pressed }) => [
+                          styles.removeDayButton,
+                          (draft.isSaving || draft.days.length <= 1) && styles.buttonDisabled,
+                          pressed &&
+                            !(draft.isSaving || draft.days.length <= 1) &&
+                            styles.removeDayButtonPressed,
+                        ]}>
+                        <Text style={styles.removeDayButtonText}>X</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                }
+                topSlotError={visibleDaysError}
+                showDayHeader={false}
                 exerciseOptions={exerciseOptions}
                 disabled={draft.isSaving}
                 canRemoveDay={draft.days.length > 1}
@@ -824,6 +877,12 @@ export function PlanTemplateNewScreen({
                 }}
                 onRemoveExercise={exerciseIndex => {
                   handleRemoveExercise(draft.activeDayIndex, exerciseIndex);
+                }}
+                onMoveExerciseUp={exerciseIndex => {
+                  handleMoveExercise(draft.activeDayIndex, exerciseIndex, 'up');
+                }}
+                onMoveExerciseDown={exerciseIndex => {
+                  handleMoveExercise(draft.activeDayIndex, exerciseIndex, 'down');
                 }}
                 onExerciseSearchChange={(exerciseIndex, query) => {
                   handleExerciseSearchChange(draft.activeDayIndex, exerciseIndex, query);
@@ -943,6 +1002,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  dayActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   dayTabsContainer: {
     gap: 8,
     paddingRight: 4,
@@ -989,6 +1053,24 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     lineHeight: 22,
+  },
+  removeDayButton: {
+    minHeight: 40,
+    minWidth: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: '#FEF2F2',
+  },
+  removeDayButtonPressed: {
+    backgroundColor: '#FEE2E2',
+  },
+  removeDayButtonText: {
+    color: '#B91C1C',
+    fontWeight: '700',
+    fontSize: 15,
   },
   loadingSection: {
     borderRadius: 16,

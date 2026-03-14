@@ -33,6 +33,7 @@ public sealed class PlanTemplatesController : ControllerBase
                     day.Name,
                     day.Exercises.Select(exercise => new PlanTemplateDayExerciseCommand(
                         exercise.ExerciseId,
+                        exercise.Order,
                         exercise.Series.Select(set => new PlanTemplateExerciseSetCommand(set.RepeatsCount)).ToArray()))
                     .ToArray()))
                 .ToArray()),
@@ -90,6 +91,7 @@ public sealed class PlanTemplatesController : ControllerBase
                     day.Name,
                     day.Exercises.Select(exercise => new PlanTemplateDayExerciseCommand(
                         exercise.ExerciseId,
+                        exercise.Order,
                         exercise.Series.Select(set => new PlanTemplateExerciseSetCommand(set.RepeatsCount)).ToArray()))
                     .ToArray()))
                 .ToArray()),
@@ -136,6 +138,7 @@ public sealed class PlanTemplatesController : ControllerBase
                     day.Exercises
                         .Select(exercise => new PlanTemplateDayExerciseResponse(
                             exercise.ExerciseId,
+                            exercise.Order,
                             exercise.Series.Select(set => new PlanTemplateExerciseSetResponse(set.RepeatsCount)).ToArray()))
                         .ToArray()))
                 .ToArray());
@@ -152,6 +155,7 @@ public sealed record PlanTemplateDayRequest(string Name, IReadOnlyList<PlanTempl
 
 public sealed record PlanTemplateDayExerciseRequest(
     Guid ExerciseId,
+    int Order,
     IReadOnlyList<PlanTemplateExerciseSetRequest> Series);
 
 public sealed record PlanTemplateExerciseSetRequest(int RepeatsCount);
@@ -167,6 +171,7 @@ public sealed record PlanTemplateDayResponse(
 
 public sealed record PlanTemplateDayExerciseResponse(
     Guid ExerciseId,
+    int Order,
     IReadOnlyList<PlanTemplateExerciseSetResponse> Series);
 
 public sealed record PlanTemplateExerciseSetResponse(int RepeatsCount);

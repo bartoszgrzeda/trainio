@@ -28,6 +28,7 @@ public sealed class PlanTemplatesControllerIntegrationTests
         payload.Days.Should().HaveCount(1);
         payload.Days[0].Name.Should().Be("Day 1");
         payload.Days[0].Exercises.Should().HaveCount(1);
+        payload.Days[0].Exercises[0].Order.Should().Be(0);
         payload.Days[0].Exercises[0].Series.Select(set => set.RepeatsCount).Should().Equal(10, 8);
     }
 
@@ -45,6 +46,43 @@ public sealed class PlanTemplatesControllerIntegrationTests
 
         var error = await response.Content.ReadFromJsonAsync<ErrorResponse>();
         error.Should().Be(new ErrorResponse("domain_error", "Plan name is invalid."));
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenExercisesAreSentOutOfOrder_ShouldReturnExercisesSortedByOrder()
+    {
+        using var factory = new CustomWebApplicationFactory();
+        using var client = factory.CreateApiClient();
+
+        var firstExerciseId = Guid.NewGuid();
+        var secondExerciseId = Guid.NewGuid();
+        var request = new CreatePlanTemplateRequest(
+            "Ordered",
+            [
+                new PlanTemplateDayRequest(
+                    "Day 1",
+                    [
+                        new PlanTemplateDayExerciseRequest(
+                            firstExerciseId,
+                            1,
+                            [new PlanTemplateExerciseSetRequest(8)]),
+                        new PlanTemplateDayExerciseRequest(
+                            secondExerciseId,
+                            0,
+                            [new PlanTemplateExerciseSetRequest(10)]),
+                    ]),
+            ]);
+
+        using var response = await client.PostAsJsonAsync("/api/plan-templates/create", request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var payload = await response.Content.ReadFromJsonAsync<PlanTemplateResponse>();
+        payload.Should().NotBeNull();
+        payload!.Days[0].Exercises.Select(exercise => exercise.Order).Should().Equal(0, 1);
+        payload.Days[0].Exercises.Select(exercise => exercise.ExerciseId)
+            .Should()
+            .Equal(secondExerciseId, firstExerciseId);
     }
 
     [Fact]
@@ -112,6 +150,7 @@ public sealed class PlanTemplatesControllerIntegrationTests
                     [
                         new PlanTemplateDayExerciseRequest(
                             Guid.NewGuid(),
+                            0,
                             [
                                 new PlanTemplateExerciseSetRequest(6),
                                 new PlanTemplateExerciseSetRequest(8),
@@ -128,6 +167,7 @@ public sealed class PlanTemplatesControllerIntegrationTests
         payload!.Id.Should().Be(created.Id);
         payload.Name.Should().Be("Updated Plan");
         payload.Days.Select(day => day.Name).Should().Equal("Day A");
+        payload.Days[0].Exercises[0].Order.Should().Be(0);
         payload.Days[0].Exercises[0].Series.Select(set => set.RepeatsCount).Should().Equal(6, 8);
     }
 
@@ -206,6 +246,7 @@ public sealed class PlanTemplatesControllerIntegrationTests
                 [
                     new PlanTemplateDayExerciseRequest(
                         Guid.NewGuid(),
+                        0,
                         [
                             new PlanTemplateExerciseSetRequest(10),
                             new PlanTemplateExerciseSetRequest(8),

@@ -20,6 +20,7 @@ public sealed class PlanTemplateTests
         planTemplate.Days.Should().HaveCount(1);
         planTemplate.Days[0].Name.Should().Be(PlanDayName.From("Day 1"));
         planTemplate.Days[0].Exercises.Should().HaveCount(1);
+        planTemplate.Days[0].Exercises[0].Order.Should().Be(0);
         planTemplate.Days[0].Exercises[0].Series.Select(set => set.RepeatsCount.Value).Should().Equal(10, 12);
     }
 
@@ -49,6 +50,7 @@ public sealed class PlanTemplateTests
         planTemplate.Name.Should().Be(PlanName.From("Updated Template"));
         planTemplate.Days.Select(day => day.Name.Value).Should().Equal("Day A", "Day B");
         planTemplate.Days[0].Exercises.Single().ExerciseId.Value.Should().Be(exerciseId);
+        planTemplate.Days[0].Exercises.Single().Order.Should().Be(0);
         planTemplate.Days[0].Exercises.Single().Series.Select(set => set.RepeatsCount.Value).Should().Equal(6, 8);
     }
 
@@ -71,6 +73,7 @@ public sealed class PlanTemplateTests
         restored.Name.Should().Be(planTemplate.Name);
         restored.Days.Select(day => day.Name.Value).Should().Equal("Upper", "Lower");
         restored.Days[0].Exercises.Single().ExerciseId.Should().Be(EntityId.From(exerciseId));
+        restored.Days[0].Exercises.Single().Order.Should().Be(0);
         restored.Days[0].Exercises.Single().Series.Select(set => set.RepeatsCount.Value).Should().Equal(10, 8);
     }
 
@@ -81,6 +84,7 @@ public sealed class PlanTemplateTests
             [
                 PlanDayExercise.From(
                     EntityId.From(exerciseId),
+                    0,
                     repeats.Select(value => ExerciseSet.From(RepeatsCount.From(value))).ToArray()),
             ]);
     }
